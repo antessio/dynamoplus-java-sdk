@@ -12,7 +12,6 @@ import com.squareup.okhttp.*;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SDK {
@@ -37,21 +36,31 @@ public class SDK {
 
     //================================== [system] collections =============================
 
-    public Collection createCollection(Collection collection) {
+    public Either<Collection, SdkException> createCollection(Collection collection) {
         System.out.println("creating collection " + collection.getName());
         return post(collection.getName(), collection, Collection.class);
     }
 
 
-    public Collection getCollection(String id) {
+    public Either<Collection, SdkException> getCollection(String id) {
         System.out.println("get collection " + id);
         return get(id, "collection", Collection.class);
     }
 
+    public Either<PaginatedResult<Collection>, SdkException> getAllCollections(Integer limit, String startFrom) {
+        Query<Collection> query = new QueryBuilder<Collection>()
+                .limit(limit)
+                .startFrom(startFrom)
+                .build();
+        return query("collection", null, query, Collection.class);
+    }
 
+    public Either<PaginatedResult<Collection>, SdkException> getAllCollections() {
+        return getAllCollections(null, null);
+    }
     //================================== [system] index =============================
 
-    public Index createIndex(Index index) {
+    public Either<Index, SdkException> createIndex(Index index) {
         System.out.println("creating index " + index);
         return post("index", index, Index.class);
     }
@@ -59,29 +68,28 @@ public class SDK {
     //================================== [domain] document =============================
 
 
-    public <T> T createDocument(String collectionName, T document, Class<T> cls) {
+    public <T> Either<T, SdkException> createDocument(String collectionName, T document, Class<T> cls) {
         System.out.println("creating document " + document);
         return post(collectionName, document, cls);
     }
 
-    public <T> T getDocument(String id, String collectionName, Class<T> cls) {
+    public <T> Either<T, SdkException> getDocument(String id, String collectionName, Class<T> cls) {
         System.out.println("get document by id " + id);
         return get(id, collectionName, cls);
     }
 
-    public <T> T updateDocument(String id, String collectionName, T document, Class<T> cls) {
+    public <T> Either<T, SdkException> updateDocument(String id, String collectionName, T document, Class<T> cls) {
         System.out.println("creating document " + document);
         return put(id, collectionName, document, cls);
 
     }
 
-    public void deleteDocument(String id, String collectionName) {
+    public Optional<SdkException> deleteDocument(String id, String collectionName) {
         System.out.println("remove document " + id + " in collection " + collectionName);
-        delete(id, collectionName);
+        return delete(id, collectionName);
     }
 
-
-    public <T> PaginatedResult<T> queryByIndex(String collectionName, String indexName, Query<T> query, Class<T> cls) {
+    public <T> Either<PaginatedResult<T>, SdkException> queryByIndex(String collectionName, String indexName, Query<T> query, Class<T> cls) {
         System.out.println("querying " + collectionName + " by " + indexName);
         System.out.println("query.getMatches() = " + query.getMatches());
         System.out.println("query.getLimit() = " + query.getLimit());
@@ -89,98 +97,97 @@ public class SDK {
         return query(collectionName, indexName, query, cls);
     }
 
+    public <T> Either<PaginatedResult<T>, SdkException> queryAll(String collectionName, Integer limit, String startFrom, Class<T> cls) {
+        return queryByIndex(collectionName, null, new Query<>(startFrom, null, limit), cls);
+    }
+
     //================================== private =============================
 
-    private <T> T get(String id, String collectionName, Class<T> cls) {
+    private <T> Either<T, SdkException> get(String id, String collectionName, Class<T> cls) {
         Request request = createRequestBuilder(collectionName, id)
                 .get()
                 .build();
-        try {
-            Either<T, SdkException> r = getResponseBody(request, cls);
-            return r.left.orElseThrow(() -> r.right.orElse(new SdkException(500, "boom")));
-        } catch (IOException e) {
-            throw new SdkException(e);
-        }
+        return getResponseBody(request, cls);
+
     }
 
-    private <T> T post(String collectionName, Object body, Class<T> cls) {
+    private <T> Either<T, SdkException> post(String collectionName, Object body, Class<T> cls) {
         try {
             Request request = createRequestBuilderJsonHeader(collectionName)
                     .post(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
                     .build();
-            Either<T, SdkException> r = getResponseBody(request, cls);
-            return r.left.orElseThrow(() -> r.right.orElse(new SdkException(500, "boom")));
-        } catch (IOException e) {
-            throw new SdkException(e);
+            return getResponseBody(request, cls);
+        } catch (JsonProcessingException e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
     }
 
-    private <T> PaginatedResult<T> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
+    private <T> Either<PaginatedResult<T>, SdkException> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
         try {
-            Request.Builder requestBuilder = createRequestBuilderJsonHeader(collectionName, "query", queryName)
-                    .post(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)));
-            Request request = requestBuilder
+            Request request = createRequestBuilderJsonHeader(collectionName, "query", queryName)
+                    .post(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
                     .build();
-            Either<PaginatedResult<T>, SdkException> r = getResponseBodyPaginated(request, responseBody -> {
-                try {
-                    JavaType type = objectMapper.getTypeFactory().constructParametricType(PaginatedResult.class, cls);
-
-                    return objectMapper.readValue(responseBody, type);
-                } catch (JsonProcessingException e) {
-                    throw new SdkException(e);
-                }
-            });
-            return r.left.orElseThrow(() -> r.right.orElse(new SdkException(500, "boom")));
-        } catch (IOException e) {
-            throw new SdkException(e);
+            return getResponseBodyPaginated(request, responseBody -> paginatedResultConverter(responseBody, cls));
+        } catch (JsonProcessingException e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
     }
 
-    private <T> T put(String id, String collectionName, T body, Class<T> cls) {
+    private <T> Either<PaginatedResult<T>, SdkException> paginatedResultConverter(String responseBody, Class<T> cls) {
+        try {
+            JavaType type = objectMapper.getTypeFactory().constructParametricType(PaginatedResult.class, cls);
+
+            return Either.ok(objectMapper.readValue(responseBody, type));
+        } catch (JsonProcessingException e) {
+            return Either.error(new SdkPayloadException("unable to de-serialize the response", e));
+        }
+    }
+
+    private <T> Either<T, SdkException> put(String id, String collectionName, T body, Class<T> cls) {
         try {
             Request request = createRequestBuilderJsonHeader(collectionName, id)
                     .put(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
                     .build();
-            Either<T, SdkException> r = getResponseBody(request, cls);
-            return r.left.orElseThrow(() -> r.right.orElse(new SdkException(500, "boom")));
-        } catch (IOException e) {
-            throw new SdkException(e);
+            return getResponseBody(request, cls);
+        } catch (JsonProcessingException e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
+
     }
 
-    private void delete(String id, String collectionName) {
+    private Optional<SdkException> delete(String id, String collectionName) {
+        Request request = createRequestBuilder(collectionName, id)
+                .delete()
+                .build();
+        return getResponseBody(request, String.class).error();
+
+    }
+
+    private <T> Either<T, SdkException> getResponseBody(Request request, Class<T> cls) {
         try {
-            Request request = createRequestBuilder(collectionName, id)
-                    .delete()
-                    .build();
-            Optional<SdkException> maybeError = getResponseBody(request, String.class).right;
-            if (maybeError.isPresent()) {
-                throw maybeError.get();
-            }
+            Response response = client.newCall(request).execute();
+            String responseBodyStr = response.body().string();
+            System.out.println(responseBodyStr);
+            return response.isSuccessful() ?
+                    Either.ok(objectMapper.readValue(responseBodyStr, cls))
+                    :
+                    Either.error(new SdkHttpException(response.code(), responseBodyStr));
         } catch (IOException e) {
-            throw new SdkException(e);
+            return Either.error(new SdkPayloadException("unable to deserialize response", e));
         }
     }
 
-    private <T> Either<T, SdkException> getResponseBody(Request request, Class<T> cls) throws IOException {
-        Response response = client.newCall(request).execute();
-        String responseBodyStr = response.body().string();
-        System.out.println(responseBodyStr);
-        return response.isSuccessful() ?
-                Either.left(objectMapper.readValue(responseBodyStr, cls))
-                :
-                Either.right(new SdkException(response.code(), responseBodyStr));
-    }
 
-
-    private <T> Either<T, SdkException> getResponseBodyPaginated(Request request, Function<String, T> converter) throws IOException {
-        Response response = client.newCall(request).execute();
-        String responseBodyStr = response.body().string();
-        System.out.println(responseBodyStr);
-        return response.isSuccessful() ?
-                Either.left(converter.apply(responseBodyStr))
-                :
-                Either.right(new SdkException(response.code(), responseBodyStr));
+    private <T> Either<T, SdkException> getResponseBodyPaginated(Request request, Function<String, Either<T, SdkException>> converter) {
+        try {
+            Response response = client.newCall(request).execute();
+            String responseBodyStr = response.body().string();
+            System.out.println(responseBodyStr);
+            return response.isSuccessful() ?
+                    converter.apply(responseBodyStr) : Either.error(new SdkHttpException(response.code(), responseBodyStr));
+        } catch (IOException e) {
+            return Either.error(new SdkPayloadException("unable to deserialize response", e));
+        }
     }
 
     private Request.Builder createRequestBuilderJsonHeader(String... pathParameters) {
@@ -207,42 +214,5 @@ public class SDK {
                 .url(sb.toString());
     }
 
-
-    static final class Either<L, R> {
-        public static <L, R> Either<L, R> left(L value) {
-            return new Either<>(Optional.of(value), Optional.empty());
-        }
-
-        public static <L, R> Either<L, R> right(R value) {
-            return new Either<>(Optional.empty(), Optional.of(value));
-        }
-
-        private final Optional<L> left;
-        private final Optional<R> right;
-
-        private Either(Optional<L> l, Optional<R> r) {
-            left = l;
-            right = r;
-        }
-
-        public <T> T map(
-                Function<? super L, ? extends T> lFunc,
-                Function<? super R, ? extends T> rFunc) {
-            return left.<T>map(lFunc).orElseGet(() -> right.map(rFunc).get());
-        }
-
-        public <T> Either<T, R> mapLeft(Function<? super L, ? extends T> lFunc) {
-            return new Either<>(left.map(lFunc), right);
-        }
-
-        public <T> Either<L, T> mapRight(Function<? super R, ? extends T> rFunc) {
-            return new Either<>(left, right.map(rFunc));
-        }
-
-        public void apply(Consumer<? super L> lFunc, Consumer<? super R> rFunc) {
-            left.ifPresent(lFunc);
-            right.ifPresent(rFunc);
-        }
-    }
 
 }
