@@ -98,7 +98,7 @@ public class SDK {
     }
 
     public <T> Either<PaginatedResult<T>, SdkException> queryAll(String collectionName, Integer limit, String startFrom, Class<T> cls) {
-        return queryByIndex(collectionName, null, new Query<>(startFrom, null, limit), cls);
+        return queryByIndex(collectionName, null, new Query<>(null, limit, startFrom), cls);
     }
 
     //================================== private =============================

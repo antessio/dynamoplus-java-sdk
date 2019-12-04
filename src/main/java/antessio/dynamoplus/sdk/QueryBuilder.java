@@ -21,6 +21,6 @@ public class QueryBuilder<T> {
     }
 
     public Query build() {
-        return new Query(startFrom, matches, limit);
+        return new Query(matches, limit, startFrom);
     }
 }

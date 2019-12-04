@@ -5,7 +5,7 @@ public class Query<T> {
     private T matches;
     private Integer limit;
 
-    public Query(String startFrom, T matches, Integer limit) {
+    public Query(T matches, Integer limit, String startFrom) {
         this.startFrom = startFrom;
         this.matches = matches;
         this.limit = limit;
