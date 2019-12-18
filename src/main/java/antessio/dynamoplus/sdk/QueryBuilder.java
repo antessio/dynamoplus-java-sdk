@@ -20,7 +20,7 @@ public class QueryBuilder<T> {
         return this;
     }
 
-    public Query build() {
-        return new Query(matches, limit, startFrom);
+    public Query<T> build() {
+        return new Query<>(matches, limit, startFrom);
     }
 }

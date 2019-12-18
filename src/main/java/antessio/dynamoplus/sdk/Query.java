@@ -1,6 +1,8 @@
 package antessio.dynamoplus.sdk;
 
-public class Query<T> {
+import java.io.Serializable;
+
+public class Query<T> implements Serializable {
     private String startFrom;
     private T matches;
     private Integer limit;

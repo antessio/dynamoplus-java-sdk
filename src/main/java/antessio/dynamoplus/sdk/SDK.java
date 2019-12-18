@@ -1,5 +1,9 @@
 package antessio.dynamoplus.sdk;
 
+import antessio.dynamoplus.sdk.http.DefaultSdkHttpClient;
+import antessio.dynamoplus.sdk.http.SdkHttpClient;
+import antessio.dynamoplus.sdk.http.SdkHttpRequest;
+import antessio.dynamoplus.sdk.http.SdkHttpResponse;
 import antessio.dynamoplus.sdk.system.collection.Collection;
 import antessio.dynamoplus.sdk.system.index.Index;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -13,24 +17,67 @@ import com.squareup.okhttp.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 public class SDK {
 
-    private final OkHttpClient client = new OkHttpClient();
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
     private final String host;
     private final String environment;
+    private final SdkHttpClient sdkHttpClient;
     private final ObjectMapper objectMapper;
 
-    public SDK(String host, String environment) {
+    public static class Builder {
+        private final String host;
+        private final String environment;
+        private ObjectMapper objectMapper;
+        private SdkHttpClient sdkHttpClient;
+
+        public Builder(String host, String environment) {
+            this.host = host;
+            this.environment = environment;
+        }
+
+        public Builder withObjectMapper(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+            return this;
+        }
+
+
+        public Builder withSdkHttpClient(SdkHttpClient sdkHttpClient) {
+            this.sdkHttpClient = sdkHttpClient;
+            return this;
+        }
+
+        public SDK build() {
+            ObjectMapper om = Optional.ofNullable(objectMapper).orElseGet(defaultObjectMapper());
+            SdkHttpClient sdkHttpClient = Optional.ofNullable(this.sdkHttpClient)
+                    .orElseGet(DefaultSdkHttpClient::new);
+            return new SDK(host, environment, om, sdkHttpClient);
+        }
+
+
+        private Supplier<ObjectMapper> defaultObjectMapper() {
+            ObjectMapper objectMapper = new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+            objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            return () -> objectMapper;
+        }
+
+
+    }
+
+    private SDK(String host, String environment, ObjectMapper objectMapper, SdkHttpClient sdkHttpClient) {
         this.host = host;
         this.environment = environment;
-        this.objectMapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
-        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        //this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        this.sdkHttpClient = sdkHttpClient;
+        this.objectMapper = objectMapper;
+
     }
 
 
@@ -104,31 +151,32 @@ public class SDK {
     //================================== private =============================
 
     private <T> Either<T, SdkException> get(String id, String collectionName, Class<T> cls) {
-        Request request = createRequestBuilder(collectionName, id)
-                .get()
-                .build();
-        return getResponseBody(request, cls);
+        try {
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), null);
+            return getResponseBody(this.sdkHttpClient.get(request), cls);
+        } catch (Exception e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
+        }
 
     }
 
-    private <T> Either<T, SdkException> post(String collectionName, Object body, Class<T> cls) {
+    private <T> Either<T, SdkException> post(String collectionName, T body, Class<T> cls) {
         try {
-            Request request = createRequestBuilderJsonHeader(collectionName)
-                    .post(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
-                    .build();
-            return getResponseBody(request, cls);
-        } catch (JsonProcessingException e) {
+            String requestBody = this.objectMapper.writeValueAsString(body);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName), Collections.singletonList("Content-Type:application/json"), requestBody);
+            return getResponseBody(this.sdkHttpClient.post(request), cls);
+        } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
     }
 
     private <T> Either<PaginatedResult<T>, SdkException> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
+
         try {
-            Request request = createRequestBuilderJsonHeader(collectionName, "query", queryName)
-                    .post(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
-                    .build();
-            return getResponseBodyPaginated(request, responseBody -> paginatedResultConverter(responseBody, cls));
-        } catch (JsonProcessingException e) {
+            String requestBody = this.objectMapper.writeValueAsString(body);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), Collections.singletonList("Content-Type:application/json"), requestBody);
+            return getResponseBodyPaginated(this.sdkHttpClient.post(request), responseBody -> paginatedResultConverter(responseBody, cls));
+        } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
     }
@@ -145,73 +193,64 @@ public class SDK {
 
     private <T> Either<T, SdkException> put(String id, String collectionName, T body, Class<T> cls) {
         try {
-            Request request = createRequestBuilderJsonHeader(collectionName, id)
-                    .put(RequestBody.create(JSON, this.objectMapper.writeValueAsString(body)))
-                    .build();
-            return getResponseBody(request, cls);
-        } catch (JsonProcessingException e) {
+            String requestBody = this.objectMapper.writeValueAsString(body);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), requestBody);
+            return getResponseBody(this.sdkHttpClient.put(request), cls);
+        } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
 
     }
 
     private Optional<SdkException> delete(String id, String collectionName) {
-        Request request = createRequestBuilder(collectionName, id)
-                .delete()
-                .build();
-        return getResponseBody(request, String.class).error();
+        try {
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), null);
+            SdkHttpResponse response = this.sdkHttpClient.delete(request);
+            if (!isSuccessfull(response.getHttpStatusCode())) {
+                return Optional.of(new SdkHttpException(response.getHttpStatusCode(), response.getResponseBody()));
+            } else {
+                return Optional.empty();
+            }
+        } catch (Exception e) {
+            return Optional.of(new SdkPayloadException("unable to serialize the request", e));
+        }
 
     }
 
-    private <T> Either<T, SdkException> getResponseBody(Request request, Class<T> cls) {
+    private <T> Either<T, SdkException> getResponseBody(SdkHttpResponse<T> response, Class<T> cls) {
+
         try {
-            Response response = client.newCall(request).execute();
-            String responseBodyStr = response.body().string();
-            System.out.println(responseBodyStr);
-            return response.isSuccessful() ?
-                    Either.ok(objectMapper.readValue(responseBodyStr, cls))
-                    :
-                    Either.error(new SdkHttpException(response.code(), responseBodyStr));
+            if (isSuccessfull(response.getHttpStatusCode())) {
+                return Either.ok(objectMapper.readValue(response.getResponseBody(), cls));
+            } else {
+                return Either.error(new SdkHttpException(response.getHttpStatusCode(), response.getResponseBody()));
+            }
         } catch (IOException e) {
             return Either.error(new SdkPayloadException("unable to deserialize response", e));
         }
     }
 
-
-    private <T> Either<T, SdkException> getResponseBodyPaginated(Request request, Function<String, Either<T, SdkException>> converter) {
-        try {
-            Response response = client.newCall(request).execute();
-            String responseBodyStr = response.body().string();
-            System.out.println(responseBodyStr);
-            return response.isSuccessful() ?
-                    converter.apply(responseBodyStr) : Either.error(new SdkHttpException(response.code(), responseBodyStr));
-        } catch (IOException e) {
-            return Either.error(new SdkPayloadException("unable to deserialize response", e));
+    private <T> Either<T, SdkException> getResponseBodyPaginated(SdkHttpResponse<T> response, Function<String, Either<T, SdkException>> converter) {
+        if (isSuccessfull(response.getHttpStatusCode())) {
+            return converter.apply(response.getResponseBody());
+        } else {
+            return Either.error(new SdkHttpException(response.getHttpStatusCode(), response.getResponseBody()));
         }
     }
 
-    private Request.Builder createRequestBuilderJsonHeader(String... pathParameters) {
-        StringBuilder sb = new StringBuilder(getBaseUrl());
-        for (String p : pathParameters) {
-            sb.append("/").append(p);
-        }
-        return new Request.Builder()
-                .addHeader("Content-Type", "application/json")
-                .url(sb.toString());
+    private boolean isSuccessfull(int httpStatusCode) {
+        return httpStatusCode >= 200 && httpStatusCode < 300;
+    }
+
+
+    private String buildUrl(String... pathParameters) {
+        return Stream.of(pathParameters)
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining("/"));
     }
 
     private String getBaseUrl() {
-        return host + "/" + environment + "/dynamoplus";
-    }
-
-
-    private Request.Builder createRequestBuilder(String... pathParameters) {
-        StringBuilder sb = new StringBuilder(getBaseUrl());
-        for (String p : pathParameters) {
-            sb.append("/").append(p);
-        }
-        return new Request.Builder()
-                .url(sb.toString());
+        return host + "/" + environment + "/dynamoplus/";
     }
 
 

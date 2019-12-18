@@ -1,10 +1,11 @@
 package antessio.dynamoplus.sdk;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class Either<Ok, Error> {
+public final class Either<Ok, Error> implements Serializable {
     public static <Ok, Error> Either<Ok, Error> ok(Ok value) {
         return new Either<>(Optional.of(value), Optional.empty());
     }

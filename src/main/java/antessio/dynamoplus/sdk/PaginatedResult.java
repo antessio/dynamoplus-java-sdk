@@ -1,8 +1,9 @@
 package antessio.dynamoplus.sdk;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class PaginatedResult<T> {
+public class PaginatedResult<T> implements Serializable {
     private List<T> data;
     private String lastKey;
 
