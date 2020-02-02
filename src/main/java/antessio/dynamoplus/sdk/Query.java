@@ -24,4 +24,13 @@ public class Query<T> implements Serializable {
     public Integer getLimit() {
         return limit;
     }
+
+    @Override
+    public String toString() {
+        return "Query{" +
+                "startFrom='" + startFrom + '\'' +
+                ", matches=" + matches +
+                ", limit=" + limit +
+                '}';
+    }
 }

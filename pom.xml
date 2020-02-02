@@ -6,7 +6,7 @@
 
     <groupId>antessio.dynamoplus.sdk</groupId>
     <artifactId>dynamo-plus-java-sdk</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.6-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -28,12 +28,13 @@
             <artifactId>okhttp</artifactId>
             <version>2.7.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.10.1</version>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
         </dependency>
+
     </dependencies>
 
 </project>

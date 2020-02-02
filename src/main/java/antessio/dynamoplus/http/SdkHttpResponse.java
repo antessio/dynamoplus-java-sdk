@@ -1,4 +1,4 @@
-package antessio.dynamoplus.sdk.http;
+package antessio.dynamoplus.http;
 
 public class SdkHttpResponse<T> {
     private final String responseBody;
