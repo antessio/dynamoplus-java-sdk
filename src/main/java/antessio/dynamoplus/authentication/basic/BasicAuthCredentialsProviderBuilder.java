@@ -14,7 +14,7 @@ public class BasicAuthCredentialsProviderBuilder {
         return this;
     }
 
-    public BasicAuthCredentialsProvider createBasicAuthCredentialsProvider() {
+    public BasicAuthCredentialsProvider build() {
         return new BasicAuthCredentialsProvider(username, password);
     }
 }

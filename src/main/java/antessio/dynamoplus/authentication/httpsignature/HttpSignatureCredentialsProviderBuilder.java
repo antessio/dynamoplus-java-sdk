@@ -14,7 +14,7 @@ public class HttpSignatureCredentialsProviderBuilder {
         return this;
     }
 
-    public HttpSignatureCredentialsProvider createHttpSignatureCredentialsProvider() {
+    public HttpSignatureCredentialsProvider build() {
         return new HttpSignatureCredentialsProvider(keyId, privateKey);
     }
 }

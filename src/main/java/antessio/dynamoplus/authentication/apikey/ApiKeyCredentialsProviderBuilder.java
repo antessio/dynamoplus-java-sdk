@@ -8,7 +8,7 @@ public class ApiKeyCredentialsProviderBuilder {
         return this;
     }
 
-    public ApiKeyCredentialsProvider createApiKeyCredentialsProvider() {
+    public ApiKeyCredentialsProvider build() {
         return new ApiKeyCredentialsProvider(apiKey);
     }
 }
