@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 
 public final class SDK {
 
+    public static final String COLLECTION_COLLECTION_NAME = "collection";
+    public static final String INDEX_COLLECTION_NAME = "index";
     private final String host;
     private final String environment;
     private final SdkHttpClient sdkHttpClient;
@@ -39,13 +41,13 @@ public final class SDK {
 
     public Either<Collection, SdkException> createCollection(Collection collection) {
         System.out.println("creating collection " + collection.getName());
-        return post(collection.getName(), collection, Collection.class);
+        return post(COLLECTION_COLLECTION_NAME, collection, Collection.class);
     }
 
 
     public Either<Collection, SdkException> getCollection(String id) {
         System.out.println("get collection " + id);
-        return get(id, "collection", Collection.class);
+        return get(id, COLLECTION_COLLECTION_NAME, Collection.class);
     }
 
     public Either<PaginatedResult<Collection>, SdkException> getAllCollections(Integer limit, String startFrom) {
@@ -53,7 +55,7 @@ public final class SDK {
                 .limit(limit)
                 .startFrom(startFrom)
                 .build();
-        return query("collection", null, query, Collection.class);
+        return query(COLLECTION_COLLECTION_NAME, null, query, Collection.class);
     }
 
     public Either<PaginatedResult<Collection>, SdkException> getAllCollections() {
@@ -63,7 +65,7 @@ public final class SDK {
 
     public Either<Index, SdkException> createIndex(Index index) {
         System.out.println("creating index " + index);
-        return post("index", index, Index.class);
+        return post(INDEX_COLLECTION_NAME, index, Index.class);
     }
 
     //================================== [domain] document =============================
@@ -223,7 +225,10 @@ public final class SDK {
     }
 
     private String getBaseUrl() {
-        return host + "/" + environment + "/dynamoplus/";
+        StringBuilder sb = new StringBuilder(host);
+        Optional.ofNullable(environment).map(e -> "/" + e).ifPresent(sb::append);
+        sb.append("/dynamoplus");
+        return sb.toString();
     }
 
 
