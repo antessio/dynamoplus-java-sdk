@@ -15,8 +15,7 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
 
     }
 
-    @Override
-    public SdkHttpResponse get(SdkHttpRequest r) throws Exception {
+    SdkHttpResponse get(SdkHttpRequest r) throws Exception {
 
         Request.Builder requestBuilder = buildHttpRequest(r);
 
@@ -34,8 +33,7 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
     }
 
 
-    @Override
-    public SdkHttpResponse post(SdkHttpRequest r) throws Exception {
+    SdkHttpResponse post(SdkHttpRequest r) throws Exception {
         Request.Builder requestBuilder = buildHttpRequest(r);
 
         r.getHeaders().forEach(h -> {
@@ -50,8 +48,7 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
         return new SdkHttpResponse<>(response.code(), response.body().string());
     }
 
-    @Override
-    public SdkHttpResponse put(SdkHttpRequest r) throws Exception {
+    SdkHttpResponse put(SdkHttpRequest r) throws Exception {
         Request.Builder requestBuilder = buildHttpRequest(r);
 
         r.getHeaders().forEach(h -> {
@@ -66,8 +63,8 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
         return new SdkHttpResponse<>(response.code(), response.body().string());
     }
 
-    @Override
-    public SdkHttpResponse patch(SdkHttpRequest r) throws Exception {
+
+    SdkHttpResponse patch(SdkHttpRequest r) throws Exception {
         Request.Builder requestBuilder = buildHttpRequest(r);
 
         r.getHeaders().forEach(h -> {
@@ -82,8 +79,7 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
         return new SdkHttpResponse<>(response.code(), response.body().string());
     }
 
-    @Override
-    public SdkHttpResponse delete(SdkHttpRequest r) throws Exception {
+    SdkHttpResponse delete(SdkHttpRequest r) throws Exception {
         Request.Builder requestBuilder = buildHttpRequest(r);
 
         r.getHeaders().forEach(h -> {
@@ -101,5 +97,26 @@ public class DefaultSdkHttpClient implements SdkHttpClient {
     private Request.Builder buildHttpRequest(SdkHttpRequest r) {
         return new Request.Builder()
                 .url(r.getBaseUrl() + "/" + r.getPath());
+    }
+
+    @Override
+    public SdkHttpResponse execute(SdkHttpRequest sdkHttpRequest) throws Exception {
+
+
+        switch (sdkHttpRequest.getMethod()) {
+            case GET:
+                return get(sdkHttpRequest);
+            case PUT:
+                return put(sdkHttpRequest);
+            case POST:
+                return post(sdkHttpRequest);
+            case PATCH:
+                return patch(sdkHttpRequest);
+            case DELETE:
+                return delete(sdkHttpRequest);
+            default:
+                throw new RuntimeException("not supported");
+        }
+
     }
 }

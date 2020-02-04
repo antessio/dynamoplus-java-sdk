@@ -1,74 +1,37 @@
 package antessio.dynamoplus.sdk;
 
-import antessio.dynamoplus.http.DefaultSdkHttpClient;
+import antessio.dynamoplus.authentication.CredentialsProvider;
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.http.SdkHttpRequest;
 import antessio.dynamoplus.http.SdkHttpResponse;
-import antessio.dynamoplus.json.DefaultJsonParser;
 import antessio.dynamoplus.json.JsonParser;
 import antessio.dynamoplus.json.exception.JsonParsingException;
-import antessio.dynamoplus.sdk.system.collection.Collection;
-import antessio.dynamoplus.sdk.system.index.Index;
+import antessio.dynamoplus.sdk.domain.authentication.Credentials;
+import antessio.dynamoplus.sdk.domain.system.collection.Collection;
+import antessio.dynamoplus.sdk.domain.system.index.Index;
 
-import com.google.gson.JsonSyntaxException;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-public class SDK {
+public final class SDK {
 
     private final String host;
     private final String environment;
     private final SdkHttpClient sdkHttpClient;
     private final JsonParser jsonParser;
-
-    public static class Builder {
-        private final String host;
-        private final String environment;
-        private JsonParser jsonParser;
-        private SdkHttpClient sdkHttpClient;
-
-        public Builder(String host, String environment) {
-            this.host = host;
-            this.environment = environment;
-        }
-
-        public Builder withJsonParser(JsonParser objectMapper) {
-            this.jsonParser = objectMapper;
-            return this;
-        }
+    private final CredentialsProvider credentialsProvider;
 
 
-        public Builder withSdkHttpClient(SdkHttpClient sdkHttpClient) {
-            this.sdkHttpClient = sdkHttpClient;
-            return this;
-        }
-
-        public SDK build() {
-            JsonParser om = Optional.ofNullable(jsonParser).orElseGet(defaultObjectMapper());
-            SdkHttpClient sdkHttpClient = Optional.ofNullable(this.sdkHttpClient)
-                    .orElseGet(DefaultSdkHttpClient::new);
-            return new SDK(host, environment, om, sdkHttpClient);
-        }
-
-
-        private Supplier<JsonParser> defaultObjectMapper() {
-            return DefaultJsonParser::new;
-        }
-
-
-    }
-
-    private SDK(String host, String environment, JsonParser jsonParser, SdkHttpClient sdkHttpClient) {
+    protected SDK(String host, String environment, JsonParser jsonParser, SdkHttpClient sdkHttpClient, CredentialsProvider credentialsProvider) {
         this.host = host;
         this.environment = environment;
         this.sdkHttpClient = sdkHttpClient;
         this.jsonParser = jsonParser;
-
+        this.credentialsProvider = credentialsProvider;
     }
 
 
@@ -143,8 +106,8 @@ public class SDK {
 
     private <T> Either<T, SdkException> get(String id, String collectionName, Class<T> cls) {
         try {
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), null);
-            return getResponseBody(this.sdkHttpClient.get(request), cls);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), SdkHttpRequest.HttpMethod.GET, getRequestHeaders(), null);
+            return getResponseBody(request, cls);
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
@@ -154,38 +117,18 @@ public class SDK {
     private <T> Either<T, SdkException> post(String collectionName, T body, Class<T> cls) {
         try {
             String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName), Collections.singletonList("Content-Type:application/json"), requestBody);
-            return getResponseBody(this.sdkHttpClient.post(request), cls);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
+            return getResponseBody(request, cls);
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
-        }
-    }
-
-    private <T> Either<PaginatedResult<T>, SdkException> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
-
-        try {
-            String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), Collections.singletonList("Content-Type:application/json"), requestBody);
-            return getResponseBodyPaginated(this.sdkHttpClient.post(request), responseBody -> paginatedResultConverter(responseBody, cls));
-        } catch (Exception e) {
-            return Either.error(new SdkPayloadException("unable to serialize the request", e));
-        }
-    }
-
-    private <T> Either<PaginatedResult<T>, SdkException> paginatedResultConverter(String responseBody, Class<T> cls) {
-        try {
-
-            return Either.ok(this.jsonParser.jsonStringToPaginatedResult(responseBody, cls));
-        } catch (Exception e) {
-            return Either.error(new SdkPayloadException("unable to de-serialize the response", e));
         }
     }
 
     private <T> Either<T, SdkException> put(String id, String collectionName, T body, Class<T> cls) {
         try {
             String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), requestBody);
-            return getResponseBody(this.sdkHttpClient.put(request), cls);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), SdkHttpRequest.HttpMethod.PUT, getRequestHeaders(), requestBody);
+            return getResponseBody(request, cls);
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
@@ -194,8 +137,8 @@ public class SDK {
 
     private Optional<SdkException> delete(String id, String collectionName) {
         try {
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), Collections.singletonList("Content-Type:application/json"), null);
-            SdkHttpResponse response = this.sdkHttpClient.delete(request);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, id), SdkHttpRequest.HttpMethod.DELETE, getRequestHeaders(), null);
+            SdkHttpResponse response = this.sdkHttpClient.execute(request);
             if (!isSuccessfull(response.getHttpStatusCode())) {
                 return Optional.of(new SdkHttpException(response.getHttpStatusCode(), response.getResponseBody()));
             } else {
@@ -207,9 +150,46 @@ public class SDK {
 
     }
 
-    private <T> Either<T, SdkException> getResponseBody(SdkHttpResponse<T> response, Class<T> cls) {
+    private <T> Either<PaginatedResult<T>, SdkException> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
 
         try {
+            String requestBody = this.jsonParser.objectToJsonString(body);
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
+            return getResponseBodyPaginated(this.sdkHttpClient.execute(request), responseBody -> paginatedResultConverter(responseBody, cls));
+        } catch (Exception e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
+        }
+    }
+
+    private List<String> getRequestHeaders() {
+        return Collections.singletonList("Content-Type:application/json");
+    }
+
+    private <T> Either<PaginatedResult<T>, SdkException> paginatedResultConverter(String responseBody, Class<T> cls) {
+        try {
+
+            return Either.ok(this.jsonParser.jsonStringToPaginatedResult(responseBody, cls));
+        } catch (Exception e) {
+            return Either.error(new SdkPayloadException("unable to de-serialize the response", e));
+        }
+    }
+
+    private <T> List<T> addAll(java.util.Collection<T> collection, T elem) {
+        List<T> list = new ArrayList<>(collection);
+        list.add(elem);
+        return list;
+    }
+
+    private <T> Either<T, SdkException> getResponseBody(SdkHttpRequest request, Class<T> cls) {
+        try {
+            SdkHttpRequest r = Optional.ofNullable(credentialsProvider)
+                    .map(p -> p.getCredentials(request))
+                    .map(Credentials::getHeader)
+                    .map(authHeader -> addAll(request.getHeaders(), authHeader))
+                    .map(headers -> new SdkHttpRequest(request.getBaseUrl(), request.getPath(), request.getMethod(), headers, request.getBody()))
+                    .orElse(request);
+
+            SdkHttpResponse response = this.sdkHttpClient.execute(r);
             if (isSuccessfull(response.getHttpStatusCode())) {
                 return Either.ok(jsonParser.jsonStringToObject(response.getResponseBody(), cls));
             } else {
@@ -217,8 +197,11 @@ public class SDK {
             }
         } catch (JsonParsingException e) {
             return Either.error(new SdkPayloadException("unable to deserialize response", e));
+        } catch (Exception e) {
+            return Either.error(new SdkPayloadException("unable to call the server"));
         }
     }
+
 
     private <T> Either<T, SdkException> getResponseBodyPaginated(SdkHttpResponse<T> response, Function<String, Either<T, SdkException>> converter) {
         if (isSuccessfull(response.getHttpStatusCode())) {

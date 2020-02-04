@@ -1,6 +1,6 @@
-package antessio.dynamoplus.sdk.system.index;
+package antessio.dynamoplus.sdk.domain.system.index;
 
-import antessio.dynamoplus.sdk.system.collection.Collection;
+import antessio.dynamoplus.sdk.domain.system.collection.Collection;
 
 import java.util.List;
 import java.util.Objects;

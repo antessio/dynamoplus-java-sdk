@@ -1,4 +1,4 @@
-package antessio.dynamoplus.sdk.system.collection;
+package antessio.dynamoplus.sdk.domain.system.collection;
 
 public enum CollectionFieldAttributeConstraint {
 
