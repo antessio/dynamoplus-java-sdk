@@ -2,10 +2,7 @@ package antessio.dynamoplus.json;
 
 import antessio.dynamoplus.json.exception.JsonParsingException;
 import antessio.dynamoplus.sdk.PaginatedResult;
-import com.google.gson.Gson;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -16,7 +13,10 @@ public class DefaultJsonParser implements JsonParser {
     private final Gson gson;
 
     public DefaultJsonParser() {
-        this.gson = new Gson();
+        this.gson = new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create();
+
     }
 
     @Override
