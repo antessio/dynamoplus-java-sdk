@@ -5,6 +5,7 @@ import antessio.dynamoplus.authentication.apikey.ApiKeyCredentialsProviderBuilde
 import antessio.dynamoplus.authentication.basic.BasicAuthCredentialsProviderBuilder;
 import antessio.dynamoplus.authentication.httpsignature.HttpSignatureCredentialsProviderBuilder;
 import antessio.dynamoplus.http.DefaultSdkHttpClient;
+import antessio.dynamoplus.http.HttpConfiguration;
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.json.DefaultJsonParser;
 import antessio.dynamoplus.json.JsonParser;
@@ -14,13 +15,13 @@ import java.util.function.Supplier;
 
 public class SdkBuilder {
     private final String host;
-    private final String environment;
     private JsonParser jsonParser;
     private SdkHttpClient sdkHttpClient;
+    private HttpConfiguration httpConfiguration = new HttpConfiguration();
     private CredentialsProvider credentialsProvider;
 
 
-    static class CredentialsProviderBuilder {
+    public static class CredentialsProviderBuilder {
 
         public CredentialsProviderBuilder() {
         }
@@ -39,9 +40,8 @@ public class SdkBuilder {
 
     }
 
-    public SdkBuilder(String host, String environment) {
+    public SdkBuilder(String host) {
         this.host = host;
-        this.environment = environment;
     }
 
     public SdkBuilder withJsonParser(JsonParser objectMapper) {
@@ -54,17 +54,23 @@ public class SdkBuilder {
         return this;
     }
 
+    public SdkBuilder withHttpConfiguration(HttpConfiguration httpConfiguration) {
+        this.httpConfiguration = httpConfiguration;
+        return this;
+    }
+
 
     public SdkBuilder withSdkHttpClient(SdkHttpClient sdkHttpClient) {
         this.sdkHttpClient = sdkHttpClient;
         return this;
     }
 
+
     public SDK build() {
         JsonParser om = Optional.ofNullable(jsonParser).orElseGet(defaultObjectMapper());
         SdkHttpClient sdkHttpClient = Optional.ofNullable(this.sdkHttpClient)
-                .orElseGet(DefaultSdkHttpClient::new);
-        return new SDK(host, environment, om, sdkHttpClient, credentialsProvider);
+                .orElseGet(() -> new DefaultSdkHttpClient(httpConfiguration));
+        return new SDK(host, om, sdkHttpClient, credentialsProvider);
     }
 
 

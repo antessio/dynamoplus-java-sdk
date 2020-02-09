@@ -2,16 +2,22 @@ package antessio.dynamoplus.http;
 
 import com.squareup.okhttp.*;
 
+import java.util.concurrent.TimeUnit;
 
-public class DefaultSdkHttpClient implements SdkHttpClient {
+
+public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
 
 
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
     private final OkHttpClient client;
 
-    public DefaultSdkHttpClient() {
+    public DefaultSdkHttpClient(HttpConfiguration httpConfiguration) {
+        super(httpConfiguration);
         this.client = new OkHttpClient();
+        this.client.setConnectTimeout(httpConfiguration.getConnectTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
+        this.client.setReadTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
+        this.client.setWriteTimeout(httpConfiguration.getWriteTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
 
     }
 

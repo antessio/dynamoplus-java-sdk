@@ -1,6 +1,7 @@
 package antessio.dynamoplus.sdk;
 
 import antessio.dynamoplus.authentication.CredentialsProvider;
+import antessio.dynamoplus.http.HttpConfiguration;
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.http.SdkHttpRequest;
 import antessio.dynamoplus.http.SdkHttpResponse;
@@ -22,15 +23,13 @@ public final class SDK {
     public static final String COLLECTION_COLLECTION_NAME = "collection";
     public static final String INDEX_COLLECTION_NAME = "index";
     private final String host;
-    private final String environment;
     private final SdkHttpClient sdkHttpClient;
     private final JsonParser jsonParser;
     private final CredentialsProvider credentialsProvider;
 
 
-    protected SDK(String host, String environment, JsonParser jsonParser, SdkHttpClient sdkHttpClient, CredentialsProvider credentialsProvider) {
+    protected SDK(String host, JsonParser jsonParser, SdkHttpClient sdkHttpClient, CredentialsProvider credentialsProvider) {
         this.host = host;
-        this.environment = environment;
         this.sdkHttpClient = sdkHttpClient;
         this.jsonParser = jsonParser;
         this.credentialsProvider = credentialsProvider;
@@ -156,7 +155,14 @@ public final class SDK {
 
         try {
             String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
+            SdkHttpRequest partialRequest = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
+            SdkHttpRequest request = Optional.ofNullable(credentialsProvider)
+                    .map(p -> p.getCredentials(partialRequest))
+                    .map(Credentials::getHeader)
+                    .map(authHeader -> addAll(partialRequest.getHeaders(), authHeader))
+                    .map(headers -> new SdkHttpRequest(partialRequest.getBaseUrl(), partialRequest.getPath(), partialRequest.getMethod(), headers, partialRequest.getBody()))
+                    .orElse(partialRequest);
+
             return getResponseBodyPaginated(this.sdkHttpClient.execute(request), responseBody -> paginatedResultConverter(responseBody, cls));
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
@@ -226,7 +232,6 @@ public final class SDK {
 
     private String getBaseUrl() {
         StringBuilder sb = new StringBuilder(host);
-        Optional.ofNullable(environment).map(e -> "/" + e).ifPresent(sb::append);
         sb.append("/dynamoplus");
         return sb.toString();
     }

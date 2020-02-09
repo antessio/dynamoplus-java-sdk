@@ -6,7 +6,9 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class DefaultJsonParser implements JsonParser {
 
@@ -15,6 +17,19 @@ public class DefaultJsonParser implements JsonParser {
     public DefaultJsonParser() {
         this.gson = new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+//                .registerTypeAdapter(PaginatedResult.class, new JsonDeserializer<PaginatedResult>() {
+//                    @Override
+//                    public PaginatedResult deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+//                        JsonObject root = jsonElement.getAsJsonObject();
+//                        List data = jsonDeserializationContext.deserialize(root.getAsJsonArray("data"), List.class);
+//                        String lastKey = null;
+//                        if (root.has("last_key")) {
+//                            //lastKey = Optional.ofNullable(root.get("last_key")).map(JsonElement::getAsString).filter(s -> !s.equals("null")).orElse(null);
+//                            System.out.println("root = " + root);
+//                        }
+//                        return new PaginatedResult(data, lastKey);
+//                    }
+//                })
                 .create();
 
     }
@@ -40,20 +55,21 @@ public class DefaultJsonParser implements JsonParser {
     @Override
     public <T> PaginatedResult<T> jsonStringToPaginatedResult(String json, Class<T> cls) throws JsonParsingException {
         try {
-            Type paginatedResultType = new TypeToken<PaginatedResult<T>>() {
-            }.getType();
-            return this.gson.fromJson(json, paginatedResultType);
-        } catch (JsonSyntaxException e) {
-            throw new JsonParseException(e);
-        }
-    }
 
-    @Override
-    public <T> List<T> jsonStringToList(String json, Class<T> cls) throws JsonParsingException {
-        try {
-            Type listType = new TypeToken<List<T>>() {
-            }.getType();
-            return this.gson.fromJson(json, listType);
+            JsonObject root = new com.google.gson.JsonParser().parse(json).getAsJsonObject();
+
+            List<T> data = new ArrayList<>();
+            for (JsonElement jsonElement : root.get("data").getAsJsonArray()) {
+                data.add(gson.fromJson(jsonElement, cls));
+            }
+            String lastKey = null;
+            if (root.has("last_key")) {
+                lastKey = Optional.ofNullable(root.get("last_key"))
+                        .filter(jsonElement -> !jsonElement.equals(JsonNull.INSTANCE))
+                        .map(JsonElement::getAsString)
+                        .orElse(null);
+            }
+            return new PaginatedResult<T>(data, lastKey);
         } catch (JsonSyntaxException e) {
             throw new JsonParseException(e);
         }
