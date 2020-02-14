@@ -1,4 +1,4 @@
-package antessio.dynamoplus.authentication.apikey;
+package antessio.dynamoplus.authentication.provider.apikey;
 
 public class ApiKeyCredentialsProviderBuilder {
     private String apiKey;

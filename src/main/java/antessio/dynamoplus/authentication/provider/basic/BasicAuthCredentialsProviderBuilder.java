@@ -1,4 +1,4 @@
-package antessio.dynamoplus.authentication.basic;
+package antessio.dynamoplus.authentication.provider.basic;
 
 public class BasicAuthCredentialsProviderBuilder {
     private String username;

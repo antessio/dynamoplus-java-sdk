@@ -1,9 +1,9 @@
-package antessio.dynamoplus.authentication.apikey;
+package antessio.dynamoplus.authentication.provider.apikey;
 
-import antessio.dynamoplus.authentication.CredentialsProvider;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
 import antessio.dynamoplus.http.SdkHttpRequest;
-import antessio.dynamoplus.sdk.domain.authentication.ApiKeyCredentials;
-import antessio.dynamoplus.sdk.domain.authentication.Credentials;
+import antessio.dynamoplus.authentication.bean.ApiKeyCredentials;
+import antessio.dynamoplus.authentication.bean.Credentials;
 
 public class ApiKeyCredentialsProvider implements CredentialsProvider {
 

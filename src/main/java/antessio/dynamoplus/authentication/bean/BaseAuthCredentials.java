@@ -1,4 +1,4 @@
-package antessio.dynamoplus.sdk.domain.authentication;
+package antessio.dynamoplus.authentication.bean;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

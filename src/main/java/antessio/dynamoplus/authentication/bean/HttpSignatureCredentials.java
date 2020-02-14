@@ -1,4 +1,4 @@
-package antessio.dynamoplus.sdk.domain.authentication;
+package antessio.dynamoplus.authentication.bean;
 
 
 public class HttpSignatureCredentials implements Credentials {

@@ -1,13 +1,12 @@
 package antessio.dynamoplus.sdk;
 
-import antessio.dynamoplus.authentication.CredentialsProvider;
-import antessio.dynamoplus.http.HttpConfiguration;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.http.SdkHttpRequest;
 import antessio.dynamoplus.http.SdkHttpResponse;
 import antessio.dynamoplus.json.JsonParser;
 import antessio.dynamoplus.json.exception.JsonParsingException;
-import antessio.dynamoplus.sdk.domain.authentication.Credentials;
+import antessio.dynamoplus.authentication.bean.Credentials;
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
 import antessio.dynamoplus.sdk.domain.system.index.Index;
 
@@ -66,6 +65,10 @@ public final class SDK {
         System.out.println("creating index " + index);
         return post(INDEX_COLLECTION_NAME, index, Index.class);
     }
+
+    //================================== [system] client authorization =============================
+
+
 
     //================================== [domain] document =============================
 

@@ -1,9 +1,9 @@
-package antessio.dynamoplus.authentication.basic;
+package antessio.dynamoplus.authentication.provider.basic;
 
-import antessio.dynamoplus.authentication.CredentialsProvider;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
 import antessio.dynamoplus.http.SdkHttpRequest;
-import antessio.dynamoplus.sdk.domain.authentication.BaseAuthCredentials;
-import antessio.dynamoplus.sdk.domain.authentication.Credentials;
+import antessio.dynamoplus.authentication.bean.BaseAuthCredentials;
+import antessio.dynamoplus.authentication.bean.Credentials;
 
 public class BasicAuthCredentialsProvider implements CredentialsProvider {
 

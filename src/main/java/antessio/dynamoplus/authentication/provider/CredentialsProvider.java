@@ -1,7 +1,7 @@
-package antessio.dynamoplus.authentication;
+package antessio.dynamoplus.authentication.provider;
 
 import antessio.dynamoplus.http.SdkHttpRequest;
-import antessio.dynamoplus.sdk.domain.authentication.Credentials;
+import antessio.dynamoplus.authentication.bean.Credentials;
 
 public interface CredentialsProvider {
     Credentials getCredentials(SdkHttpRequest request);

@@ -1,9 +1,9 @@
 package antessio.dynamoplus.sdk;
 
-import antessio.dynamoplus.authentication.CredentialsProvider;
-import antessio.dynamoplus.authentication.apikey.ApiKeyCredentialsProviderBuilder;
-import antessio.dynamoplus.authentication.basic.BasicAuthCredentialsProviderBuilder;
-import antessio.dynamoplus.authentication.httpsignature.HttpSignatureCredentialsProviderBuilder;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
+import antessio.dynamoplus.authentication.provider.apikey.ApiKeyCredentialsProviderBuilder;
+import antessio.dynamoplus.authentication.provider.basic.BasicAuthCredentialsProviderBuilder;
+import antessio.dynamoplus.authentication.provider.httpsignature.HttpSignatureCredentialsProviderBuilder;
 import antessio.dynamoplus.http.DefaultSdkHttpClient;
 import antessio.dynamoplus.http.HttpConfiguration;
 import antessio.dynamoplus.http.SdkHttpClient;

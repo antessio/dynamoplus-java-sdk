@@ -1,4 +1,4 @@
-package antessio.dynamoplus.authentication.httpsignature;
+package antessio.dynamoplus.authentication.provider.httpsignature;
 
 public class HttpSignatureCredentialsProviderBuilder {
     private String keyId;

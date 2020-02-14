@@ -1,9 +1,9 @@
-package antessio.dynamoplus.authentication.httpsignature;
+package antessio.dynamoplus.authentication.provider.httpsignature;
 
-import antessio.dynamoplus.authentication.CredentialsProvider;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
 import antessio.dynamoplus.http.SdkHttpRequest;
-import antessio.dynamoplus.sdk.domain.authentication.Credentials;
-import antessio.dynamoplus.sdk.domain.authentication.HttpSignatureCredentials;
+import antessio.dynamoplus.authentication.bean.Credentials;
+import antessio.dynamoplus.authentication.bean.HttpSignatureCredentials;
 
 import java.security.KeyFactory;
 import java.security.Signature;
