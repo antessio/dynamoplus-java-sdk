@@ -2,6 +2,8 @@ package antessio.dynamoplus.authentication.bean;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
 
 public class BaseAuthCredentials implements Credentials {
 
@@ -15,7 +17,7 @@ public class BaseAuthCredentials implements Credentials {
 
 
     @Override
-    public String getHeader() {
-        return "Authorization: Basic " + Base64.getEncoder().encodeToString((this.username + ":" + this.password).getBytes(StandardCharsets.UTF_8));
+    public List<String> getHeader() {
+        return Collections.singletonList("Authorization: Basic " + Base64.getEncoder().encodeToString((this.username + ":" + this.password).getBytes(StandardCharsets.UTF_8)));
     }
 }

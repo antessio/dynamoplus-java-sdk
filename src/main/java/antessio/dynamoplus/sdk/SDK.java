@@ -7,6 +7,8 @@ import antessio.dynamoplus.http.SdkHttpResponse;
 import antessio.dynamoplus.json.JsonParser;
 import antessio.dynamoplus.json.exception.JsonParsingException;
 import antessio.dynamoplus.authentication.bean.Credentials;
+import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationApiKey;
+import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationHttpSignature;
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
 import antessio.dynamoplus.sdk.domain.system.index.Index;
 
@@ -21,6 +23,7 @@ public final class SDK {
 
     public static final String COLLECTION_COLLECTION_NAME = "collection";
     public static final String INDEX_COLLECTION_NAME = "index";
+    public static final String CLIENT_AUTHORIZATION_COLLECTION_NAME = "client_authorization";
     private final String host;
     private final SdkHttpClient sdkHttpClient;
     private final JsonParser jsonParser;
@@ -68,6 +71,21 @@ public final class SDK {
 
     //================================== [system] client authorization =============================
 
+    public Either<ClientAuthorizationApiKey, SdkException> createClientAuthorizationApiKey(ClientAuthorizationApiKey clientAuthorization) {
+        return post(CLIENT_AUTHORIZATION_COLLECTION_NAME, clientAuthorization, ClientAuthorizationApiKey.class);
+    }
+
+    public Either<ClientAuthorizationHttpSignature, SdkException> createClientAuthorizationHttpSignature(ClientAuthorizationHttpSignature clientAuthorization) {
+        return post(CLIENT_AUTHORIZATION_COLLECTION_NAME, clientAuthorization, ClientAuthorizationHttpSignature.class);
+    }
+
+    public Either<ClientAuthorizationApiKey, SdkException> getClientAuthorizationApiKey(String clientId) {
+        return get(clientId, CLIENT_AUTHORIZATION_COLLECTION_NAME, ClientAuthorizationApiKey.class);
+    }
+
+    public Either<ClientAuthorizationHttpSignature, SdkException> getClientAuthorizationHttpSignature(String clientId) {
+        return get(clientId, CLIENT_AUTHORIZATION_COLLECTION_NAME, ClientAuthorizationHttpSignature.class);
+    }
 
 
     //================================== [domain] document =============================
@@ -185,9 +203,9 @@ public final class SDK {
         }
     }
 
-    private <T> List<T> addAll(java.util.Collection<T> collection, T elem) {
+    private <T> List<T> addAll(java.util.Collection<T> collection, List<T> elems) {
         List<T> list = new ArrayList<>(collection);
-        list.add(elem);
+        list.addAll(elems);
         return list;
     }
 

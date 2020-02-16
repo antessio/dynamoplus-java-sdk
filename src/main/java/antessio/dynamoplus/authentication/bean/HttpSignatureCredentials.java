@@ -1,6 +1,9 @@
 package antessio.dynamoplus.authentication.bean;
 
 
+import java.util.Collections;
+import java.util.List;
+
 public class HttpSignatureCredentials implements Credentials {
 
     private final String signature;
@@ -16,11 +19,12 @@ public class HttpSignatureCredentials implements Credentials {
     }
 
     @Override
-    public String getHeader() {
-        return String.format("Authorization: Signature keyId=\"%s\",algorithm=\"%s\",headers=\"%s\",signature=\"%s\"",
+    public List<String> getHeader() {
+        return Collections.singletonList(String.format("Authorization: Signature keyId=\"%s\",algorithm=\"%s\",headers=\"%s\",signature=\"%s\"",
                 keyId,
                 algorithm,
                 headersString,
-                signature);
+                signature)
+        );
     }
 }
