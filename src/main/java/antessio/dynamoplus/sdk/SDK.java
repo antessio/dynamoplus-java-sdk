@@ -27,14 +27,14 @@ public final class SDK {
     private final String host;
     private final SdkHttpClient sdkHttpClient;
     private final JsonParser jsonParser;
-    private final CredentialsProvider credentialsProvider;
 
 
-    protected SDK(String host, JsonParser jsonParser, SdkHttpClient sdkHttpClient, CredentialsProvider credentialsProvider) {
+    protected SDK(String host,
+                  JsonParser jsonParser,
+                  SdkHttpClient sdkHttpClient) {
         this.host = host;
         this.sdkHttpClient = sdkHttpClient;
         this.jsonParser = jsonParser;
-        this.credentialsProvider = credentialsProvider;
     }
 
 
@@ -176,14 +176,7 @@ public final class SDK {
 
         try {
             String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest partialRequest = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
-            SdkHttpRequest request = Optional.ofNullable(credentialsProvider)
-                    .map(p -> p.getCredentials(partialRequest))
-                    .map(Credentials::getHeader)
-                    .map(authHeader -> addAll(partialRequest.getHeaders(), authHeader))
-                    .map(headers -> new SdkHttpRequest(partialRequest.getBaseUrl(), partialRequest.getPath(), partialRequest.getMethod(), headers, partialRequest.getBody()))
-                    .orElse(partialRequest);
-
+            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
             return getResponseBodyPaginated(this.sdkHttpClient.execute(request), responseBody -> paginatedResultConverter(responseBody, cls));
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
@@ -211,14 +204,8 @@ public final class SDK {
 
     private <T> Either<T, SdkException> getResponseBody(SdkHttpRequest request, Class<T> cls) {
         try {
-            SdkHttpRequest r = Optional.ofNullable(credentialsProvider)
-                    .map(p -> p.getCredentials(request))
-                    .map(Credentials::getHeader)
-                    .map(authHeader -> addAll(request.getHeaders(), authHeader))
-                    .map(headers -> new SdkHttpRequest(request.getBaseUrl(), request.getPath(), request.getMethod(), headers, request.getBody()))
-                    .orElse(request);
 
-            SdkHttpResponse response = this.sdkHttpClient.execute(r);
+            SdkHttpResponse response = this.sdkHttpClient.execute(request);
             if (isSuccessfull(response.getHttpStatusCode())) {
                 return Either.ok(jsonParser.jsonStringToObject(response.getResponseBody(), cls));
             } else {
@@ -227,7 +214,7 @@ public final class SDK {
         } catch (JsonParsingException e) {
             return Either.error(new SdkPayloadException("unable to deserialize response", e));
         } catch (Exception e) {
-            return Either.error(new SdkPayloadException("unable to call the server"));
+            return Either.error(new SdkPayloadException("unable to call the server", e));
         }
     }
 

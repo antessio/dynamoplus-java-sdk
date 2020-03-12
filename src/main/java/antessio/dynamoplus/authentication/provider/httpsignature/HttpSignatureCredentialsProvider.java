@@ -8,13 +8,14 @@ import antessio.dynamoplus.authentication.bean.HttpSignatureCredentials;
 import java.security.KeyFactory;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
 
 public class HttpSignatureCredentialsProvider implements CredentialsProvider {
-    public static final String HEADER_FIELD_SEPARATOR = ": ";
+    public static final String HEADER_FIELD_SEPARATOR = ":";
     public static final String REQUEST_TARGET = "(request-target)";
     public static final String ALGORITHM = "rsa-sha256";
 
@@ -36,7 +37,7 @@ public class HttpSignatureCredentialsProvider implements CredentialsProvider {
     }
 
     private String concatHeadersFields(List<String> headers) {
-        return headers.isEmpty() ? "" : " " + headers.stream().map(String::toLowerCase).collect(Collectors.joining(" "));
+        return headers.isEmpty() ? "" : headers.stream().map(h -> h.split(":", 2)[0]).map(String::trim).map(String::toLowerCase).collect(Collectors.joining(" "));
     }
 
     private byte[] signMessage(byte[] data) {
@@ -61,9 +62,10 @@ public class HttpSignatureCredentialsProvider implements CredentialsProvider {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(REQUEST_TARGET + ": ").append(method.toLowerCase()).append(" ").append(path.toLowerCase());
         for (String header : headers) {
-            String headerField = header.split(HEADER_FIELD_SEPARATOR)[0];
-            String headerValue = header.split(HEADER_FIELD_SEPARATOR)[1];
-            stringBuilder.append("\n").append(headerField.toLowerCase()).append(HEADER_FIELD_SEPARATOR).append(headerValue);
+            String[] headersSplitted = header.split(HEADER_FIELD_SEPARATOR, 2);
+            String headerField = headersSplitted[0];
+            String headerValue = headersSplitted[1];
+            stringBuilder.append("\n").append(headerField.toLowerCase()).append(HEADER_FIELD_SEPARATOR).append(" ").append(headerValue);
         }
         return stringBuilder.toString();
     }

@@ -69,8 +69,8 @@ public class SdkBuilder {
     public SDK build() {
         JsonParser om = Optional.ofNullable(jsonParser).orElseGet(defaultObjectMapper());
         SdkHttpClient sdkHttpClient = Optional.ofNullable(this.sdkHttpClient)
-                .orElseGet(() -> new DefaultSdkHttpClient(httpConfiguration));
-        return new SDK(host, om, sdkHttpClient, credentialsProvider);
+                .orElseGet(() -> new DefaultSdkHttpClient(httpConfiguration, credentialsProvider));
+        return new SDK(host, om, sdkHttpClient);
     }
 
 

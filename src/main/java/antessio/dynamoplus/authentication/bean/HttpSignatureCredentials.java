@@ -20,11 +20,12 @@ public class HttpSignatureCredentials implements Credentials {
 
     @Override
     public List<String> getHeader() {
-        return Collections.singletonList(String.format("Authorization: Signature keyId=\"%s\",algorithm=\"%s\",headers=\"%s\",signature=\"%s\"",
-                keyId,
-                algorithm,
-                headersString,
-                signature)
+        return Collections.singletonList(
+                String.format("Authorization: Signature keyId=\"%s\",algorithm=\"%s\",headers=\"(request-target) %s\",signature=\"%s\"",
+                        keyId,
+                        algorithm,
+                        headersString,
+                        signature)
         );
     }
 }

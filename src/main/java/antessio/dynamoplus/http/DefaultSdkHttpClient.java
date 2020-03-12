@@ -1,8 +1,18 @@
 package antessio.dynamoplus.http;
 
-import com.squareup.okhttp.*;
 
+import antessio.dynamoplus.authentication.bean.Credentials;
+import antessio.dynamoplus.authentication.provider.CredentialsProvider;
+import okhttp3.*;
+import okio.Buffer;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
@@ -12,14 +22,113 @@ public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
             = MediaType.parse("application/json; charset=utf-8");
     private final OkHttpClient client;
 
-    public DefaultSdkHttpClient(HttpConfiguration httpConfiguration) {
-        super(httpConfiguration);
-        this.client = new OkHttpClient();
-        this.client.setConnectTimeout(httpConfiguration.getConnectTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
-        this.client.setReadTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
-        this.client.setWriteTimeout(httpConfiguration.getWriteTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
+    private class DigestHeaderInterceptor implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+
+            Request request = chain.request();
+            Optional<Request> maybeNewRequest = bodyToString(request)
+                    .map(this::hashWith256)
+                    .map(d -> String.format("Digest: SHA-256=%s", d))
+                    .map(Collections::singletonList)
+                    .map(headers -> addHeaders(request, headers));
+            return chain.proceed(maybeNewRequest.orElse(request));
+        }
+
+
+        String hashWith256(String textToHash) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] byteOfTextToHash = textToHash.getBytes(StandardCharsets.UTF_8);
+                byte[] hashedByetArray = digest.digest(byteOfTextToHash);
+                String encoded = Base64.getEncoder().encodeToString(hashedByetArray);
+                return encoded;
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private class CredentialsProviderNetworkInterceptor implements Interceptor {
+        private final CredentialsProvider credentialsProvider;
+
+        CredentialsProviderNetworkInterceptor(CredentialsProvider credentialsProvider) {
+            this.credentialsProvider = credentialsProvider;
+        }
+
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            Credentials credentials = credentialsProvider.getCredentials(fromOkHttpClientRequest(request));
+            return chain.proceed(addCredentialsHeaders(request, credentials));
+        }
+
+        private Request addCredentialsHeaders(Request request, Credentials credentials) {
+            return addHeaders(request, credentials.getHeader());
+        }
+
+        private SdkHttpRequest fromOkHttpClientRequest(Request request) {
+            String baseUrl = request.url().url().getProtocol() + "://" + request.url().url().getHost();
+            List<String> headers = request.headers()
+                    .toMultimap()
+                    .entrySet()
+                    .stream()
+                    .map(e -> e.getKey() + ":" + String.join(" ", e.getValue()))
+                    .collect(Collectors.toList());
+            return new SdkHttpRequest(
+                    baseUrl,
+                    request.url().encodedPath(),
+                    SdkHttpRequest.HttpMethod.valueOf(request.method().toUpperCase()),
+                    headers,
+                    bodyToString(request).orElse(null)
+            );
+        }
+    }
+
+    private static Optional<String> bodyToString(final Request request) {
+
+        return Optional.ofNullable(request)
+                .map(Request::newBuilder)
+                .map(Request.Builder::build)
+                .map(Request::body)
+                .map(body -> {
+                    Buffer buffer = new Buffer();
+                    try {
+                        body.writeTo(buffer);
+                        return buffer.readUtf8();
+                    } catch (IOException e) {
+                        return null;
+                    }
+                });
+    }
+
+    private static Request addHeaders(Request request, List<String> headers) {
+        Headers.Builder headersBuilder = request.headers().newBuilder();
+        for (String h : headers) {
+            String[] split = h.split(":");
+            headersBuilder.add(split[0], split[1]);
+        }
+        return new Request.Builder()
+                .url(request.url())
+                .method(request.method(), request.body())
+                .tag(request.tag())
+                .headers(headersBuilder.build())
+                .build();
+    }
+
+    public DefaultSdkHttpClient(HttpConfiguration httpConfiguration, CredentialsProvider credentialsProvider) {
+        super(httpConfiguration, credentialsProvider);
+        this.client = new OkHttpClient.Builder()
+                .connectTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
+                .readTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
+                .writeTimeout(httpConfiguration.getWriteTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
+                .addNetworkInterceptor(new DigestHeaderInterceptor())
+                .addNetworkInterceptor(new CredentialsProviderNetworkInterceptor(credentialsProvider))
+                .build();
 
     }
+
 
     SdkHttpResponse get(SdkHttpRequest r) throws Exception {
 
@@ -125,4 +234,6 @@ public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
         }
 
     }
+
+
 }
