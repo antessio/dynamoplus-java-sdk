@@ -12,6 +12,7 @@
     <properties>
         <junit-jupiter.version>5.5.2</junit-jupiter.version>
         <ok-http-client-version>3.0.0-RC1</ok-http-client-version>
+        <unirest-version>3.4.01</unirest-version>
     </properties>
     <build>
         <plugins>
@@ -28,6 +29,11 @@
 
 
     <dependencies>
+        <dependency>
+            <groupId>com.konghq</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>${unirest-version}</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

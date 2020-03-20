@@ -1,11 +1,23 @@
 package antessio.dynamoplus.json;
 
 
+import antessio.dynamoplus.authentication.provider.basic.BasicAuthCredentialsProvider;
+import antessio.dynamoplus.http.HttpConfiguration;
+import antessio.dynamoplus.http.unirest.UniRestSdkHttpClient;
 import antessio.dynamoplus.json.exception.JsonParsingException;
-import antessio.dynamoplus.sdk.PaginatedResult;
+import antessio.dynamoplus.sdk.*;
+import antessio.dynamoplus.sdk.domain.system.collection.Collection;
+import antessio.dynamoplus.sdk.domain.system.collection.CollectionBuilder;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 public class TestDefaultJsonParser {
@@ -29,6 +41,28 @@ public class TestDefaultJsonParser {
         assertThat(result.getData().get(0)).matches(c -> c.getName().equals("Pulp"));
     }
 
+
+    @Test
+    void testUnirest() {
+        SDK sdk = new SdkBuilder("http://localhost:3000",
+                new UniRestSdkHttpClient(new HttpConfiguration(60000, 60000, 60000),
+                        new BasicAuthCredentialsProvider("root", "12345"))
+        ).build();
+        Either<Collection, SdkException> r = sdk.createCollection(new CollectionBuilder()
+                .name("mmmt")
+                .idKey("mmmt")
+                .createCollection());
+        r.error().ifPresent(combineConsumers(Throwable::printStackTrace, (e) -> fail("test failed " + e.getMessage())));
+        r.ok().ifPresent(combineConsumers(System.out::println, (c) -> assertThat(c).matches(coll -> coll.getName().equals("mmmt"))));
+    }
+
+    <T> Consumer<T> combineConsumers(Consumer<T>... consumers) {
+        return o -> {
+            for (Consumer<T> c : consumers) {
+                c.accept(o);
+            }
+        };
+    }
 
     class Category {
         private String id;
