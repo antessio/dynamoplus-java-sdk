@@ -23,7 +23,7 @@ public class SdkBuilder {
     }
 
 
-    public SDK build() {
+    public SDK buildV1() {
         JsonParser om = Optional.ofNullable(jsonParser).orElseGet(defaultObjectMapper());
         return new SDK(host, om, sdkHttpClient);
     }
@@ -34,4 +34,8 @@ public class SdkBuilder {
     }
 
 
+    public SDKV2 buildV2() {
+        JsonParser om = Optional.ofNullable(jsonParser).orElseGet(defaultObjectMapper());
+        return new SDKV2(host, om, sdkHttpClient);
+    }
 }
