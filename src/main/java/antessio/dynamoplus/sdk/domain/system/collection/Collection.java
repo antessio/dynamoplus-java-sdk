@@ -8,21 +8,15 @@ public class Collection {
 
     private String idKey;
     private String name;
-    private List<Field> fields;
-
-    public Collection(String idKey, String name) {
-        this.idKey = idKey;
-        this.name = name;
-        this.fields = Collections.emptyList();
-    }
+    private List<Attribute> attributes;
 
     public Collection() {
     }
 
-    public Collection(String idKey, String name, List<Field> fields) {
+    public Collection(String idKey, String name, List<Attribute> attributes) {
         this.idKey = idKey;
         this.name = name;
-        this.fields = fields;
+        this.attributes = attributes;
     }
 
     public String getIdKey() {
@@ -33,8 +27,8 @@ public class Collection {
         return name;
     }
 
-    public List<Field> getFields() {
-        return fields;
+    public List<Attribute> getAttributes() {
+        return attributes;
     }
 
     @Override
@@ -42,7 +36,7 @@ public class Collection {
         return "Collection{" +
                 "idKey='" + idKey + '\'' +
                 ", name='" + name + '\'' +
-                ", fields=" + fields +
+                ", attributes=" + attributes +
                 '}';
     }
 
@@ -53,11 +47,11 @@ public class Collection {
         Collection that = (Collection) o;
         return Objects.equals(idKey, that.idKey) &&
                 Objects.equals(name, that.name) &&
-                Objects.equals(fields, that.fields);
+                Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idKey, name, fields);
+        return Objects.hash(idKey, name, attributes);
     }
 }
