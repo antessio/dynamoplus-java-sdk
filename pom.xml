@@ -6,7 +6,7 @@
 
     <groupId>antessio.dynamoplus.sdk</groupId>
     <artifactId>dynamo-plus-java-sdk</artifactId>
-    <version>2.2.0.1-v0.3</version>
+    <version>2.2.0.2-v0.3</version>
 
 
     <properties>

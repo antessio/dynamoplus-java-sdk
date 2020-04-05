@@ -187,8 +187,9 @@ public class OkHttpSdkHttpClient extends AbstractSdkHttpClient {
             requestBuilder.addHeader(splitted[0], splitted[1]);
         });
 
-        Request request = requestBuilder
-                .delete(RequestBody.create(JSON, r.getBody()))
+        Request request = Optional.ofNullable(r.getBody())
+                .map(b -> requestBuilder.delete(RequestBody.create(JSON, b)))
+                .orElseGet(() -> requestBuilder.delete())
                 .build();
         Response response = client.newCall(request).execute();
         return new SdkHttpResponse<>(response.code(), response.body().string());
