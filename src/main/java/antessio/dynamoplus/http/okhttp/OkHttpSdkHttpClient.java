@@ -1,21 +1,19 @@
-package antessio.dynamoplus.http;
+package antessio.dynamoplus.http.okhttp;
 
 
 import antessio.dynamoplus.authentication.bean.Credentials;
 import antessio.dynamoplus.authentication.provider.CredentialsProvider;
+import antessio.dynamoplus.http.*;
 import okhttp3.*;
 import okio.Buffer;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
-public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
+public class OkHttpSdkHttpClient extends AbstractSdkHttpClient {
 
 
     public static final MediaType JSON
@@ -28,25 +26,12 @@ public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
 
             Request request = chain.request();
             Optional<Request> maybeNewRequest = bodyToString(request)
-                    .map(this::hashWith256)
-                    .map(d -> String.format("Digest: SHA-256=%s", d))
+                    .map(HttpUtils::getDigestHeaderFromRequestBody)
                     .map(Collections::singletonList)
                     .map(headers -> addHeaders(request, headers));
             return chain.proceed(maybeNewRequest.orElse(request));
         }
 
-
-        String hashWith256(String textToHash) {
-            try {
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] byteOfTextToHash = textToHash.getBytes(StandardCharsets.UTF_8);
-                byte[] hashedByetArray = digest.digest(byteOfTextToHash);
-                String encoded = Base64.getEncoder().encodeToString(hashedByetArray);
-                return encoded;
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private class CredentialsProviderNetworkInterceptor implements Interceptor {
@@ -117,7 +102,7 @@ public class DefaultSdkHttpClient extends AbstractSdkHttpClient {
                 .build();
     }
 
-    public DefaultSdkHttpClient(HttpConfiguration httpConfiguration, CredentialsProvider credentialsProvider) {
+    public OkHttpSdkHttpClient(HttpConfiguration httpConfiguration, CredentialsProvider credentialsProvider) {
         super(httpConfiguration, credentialsProvider);
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)

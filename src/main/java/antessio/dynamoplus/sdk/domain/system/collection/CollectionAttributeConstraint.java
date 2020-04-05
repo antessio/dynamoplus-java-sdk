@@ -1,13 +1,13 @@
 package antessio.dynamoplus.sdk.domain.system.collection;
 
-public enum CollectionFieldAttributeConstraint {
+public enum CollectionAttributeConstraint {
 
     NULLABLE(0),
     NOT_NULL(1);
 
     private final int typeCode;
 
-    CollectionFieldAttributeConstraint(int typeCode) {
+    CollectionAttributeConstraint(int typeCode) {
         this.typeCode = typeCode;
     }
 

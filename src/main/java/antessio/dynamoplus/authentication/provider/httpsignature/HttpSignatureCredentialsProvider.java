@@ -1,6 +1,7 @@
 package antessio.dynamoplus.authentication.provider.httpsignature;
 
 import antessio.dynamoplus.authentication.provider.CredentialsProvider;
+import antessio.dynamoplus.http.HttpUtils;
 import antessio.dynamoplus.http.SdkHttpRequest;
 import antessio.dynamoplus.authentication.bean.Credentials;
 import antessio.dynamoplus.authentication.bean.HttpSignatureCredentials;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 
 
 public class HttpSignatureCredentialsProvider implements CredentialsProvider {
-    public static final String HEADER_FIELD_SEPARATOR = ":";
     public static final String REQUEST_TARGET = "(request-target)";
     public static final String ALGORITHM = "rsa-sha256";
 
@@ -37,7 +37,7 @@ public class HttpSignatureCredentialsProvider implements CredentialsProvider {
     }
 
     private String concatHeadersFields(List<String> headers) {
-        return headers.isEmpty() ? "" : headers.stream().map(h -> h.split(":", 2)[0]).map(String::trim).map(String::toLowerCase).collect(Collectors.joining(" "));
+        return headers.isEmpty() ? "" : headers.stream().map(HttpUtils::splitHeader).map(h -> h[0]).map(String::trim).map(String::toLowerCase).collect(Collectors.joining(" "));
     }
 
     private byte[] signMessage(byte[] data) {
@@ -62,10 +62,10 @@ public class HttpSignatureCredentialsProvider implements CredentialsProvider {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(REQUEST_TARGET + ": ").append(method.toLowerCase()).append(" ").append(path.toLowerCase());
         for (String header : headers) {
-            String[] headersSplitted = header.split(HEADER_FIELD_SEPARATOR, 2);
+            String[] headersSplitted = HttpUtils.splitHeader(header);
             String headerField = headersSplitted[0];
             String headerValue = headersSplitted[1];
-            stringBuilder.append("\n").append(headerField.toLowerCase()).append(HEADER_FIELD_SEPARATOR).append(" ").append(headerValue);
+            stringBuilder.append("\n").append(headerField.toLowerCase()).append(HttpUtils.HEADER_FIELD_SEPARATOR).append(" ").append(headerValue);
         }
         return stringBuilder.toString();
     }
