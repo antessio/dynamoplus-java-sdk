@@ -8,12 +8,12 @@ public class Collection {
     private String idKey;
     private String name;
     private List<Attribute> attributes;
-    private boolean autoGenerateId;
+    private Boolean autoGenerateId;
 
     public Collection() {
     }
 
-    public Collection(String idKey, String name, List<Attribute> attributes, boolean autoGenerateId) {
+    public Collection(String idKey, String name, List<Attribute> attributes, Boolean autoGenerateId) {
         this.idKey = idKey;
         this.name = name;
         this.attributes = attributes;
@@ -32,7 +32,7 @@ public class Collection {
         return attributes;
     }
 
-    public boolean isAutoGenerateId() {
+    public Boolean isAutoGenerateId() {
         return autoGenerateId;
     }
 

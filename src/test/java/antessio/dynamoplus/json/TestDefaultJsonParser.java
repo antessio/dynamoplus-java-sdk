@@ -3,8 +3,14 @@ package antessio.dynamoplus.json;
 
 import antessio.dynamoplus.json.exception.JsonParsingException;
 import antessio.dynamoplus.sdk.PaginatedResult;
+import antessio.dynamoplus.sdk.domain.conditions.Predicate;
+import antessio.dynamoplus.sdk.domain.conditions.ConditionBuilder;
+import antessio.dynamoplus.sdk.domain.system.index.Index;
+import antessio.dynamoplus.sdk.domain.system.index.IndexBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
@@ -16,6 +22,47 @@ public class TestDefaultJsonParser {
     @BeforeEach
     void setUp() {
         defaultJsonParser = new DefaultJsonParser();
+    }
+
+
+    @Test
+    void fromStringToCondition() throws JsonParsingException {
+        //given
+        //when
+        Predicate result = defaultJsonParser.jsonStringToObject("{\"and\":[{\"eq\":{\"field_name\":\"field1\",\"value\":\"value1\"}},{\"eq\":{\"field_name\":\"field2\",\"value\":\"value2\"}}]}", Predicate.class);
+        //then
+        System.out.println("result = " + result);
+    }
+
+    @Test
+    void parseIndex() throws JsonParsingException {
+        //given
+        //when
+        Predicate condition = new ConditionBuilder()
+                .withAnd(Arrays.asList(
+                        new ConditionBuilder().withEq("field1", "value1"),
+                        new ConditionBuilder().withEq("field2", "value2"),
+                        new ConditionBuilder().withRange("field3", "value3", "value4")
+                ));
+        Index index = new IndexBuilder()
+                .collection("example")
+                .name("example_by_whatever")
+                .orderingKey("field3")
+                .createIndex();
+        //then
+        String indexStr = defaultJsonParser.objectToJsonString(index);
+        System.out.println("indexStr = " + indexStr);
+    }
+
+    @Test
+    void parseQuery() throws JsonParsingException {
+        Predicate predicate = new ConditionBuilder()
+                .withAnd(Arrays.asList(
+                        new ConditionBuilder().withEq("field1", "value1"),
+                        new ConditionBuilder().withEq("field2", "value2")
+                ));
+        String c = defaultJsonParser.objectToJsonString(predicate);
+        System.out.println("c = " + c);
     }
 
     @Test

@@ -2,9 +2,11 @@ package antessio.dynamoplus.sdk;
 
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.http.SdkHttpRequest;
+import antessio.dynamoplus.http.SdkHttpRequestBuilder;
 import antessio.dynamoplus.http.SdkHttpResponse;
 import antessio.dynamoplus.json.JsonParser;
 import antessio.dynamoplus.json.exception.JsonParsingException;
+import antessio.dynamoplus.sdk.domain.document.query.Query;
 
 import java.util.*;
 import java.util.function.Function;
@@ -36,6 +38,35 @@ public class AbstractSDK {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
         }
 
+    }
+
+
+    protected <T> Either<PaginatedResult<T>, SdkException> getAll(String collectionName, Class<T> cls, Integer limit, String startFrom) {
+        try {
+            //SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName), SdkHttpRequest.HttpMethod.GET, getRequestHeaders(), null);
+            SdkHttpRequest request = SdkHttpRequestBuilder.aSdkHttpRequest()
+                    .withBaseUrl(getBaseUrl())
+                    .withPath(buildUrl(collectionName))
+                    .withMethod(SdkHttpRequest.HttpMethod.GET)
+                    .withHeaders(getRequestHeaders())
+                    .withBody(null)
+                    .withQueryParameters(getPaginationQueryParameters(limit, startFrom))
+                    .build();
+            return getResponseBodyPaginated(this.sdkHttpClient.execute(request), responseBody -> paginatedResultConverter(responseBody, cls));
+        } catch (Exception e) {
+            return Either.error(new SdkPayloadException("unable to serialize the request", e));
+        }
+
+    }
+
+    private Map<String, String> getPaginationQueryParameters(Integer limit, String startFrom) {
+        Map<String, String> queryParameters = new HashMap<>();
+        Optional.ofNullable(limit)
+                .map(Object::toString)
+                .ifPresent(l -> queryParameters.put("limit", l));
+        Optional.ofNullable(startFrom)
+                .ifPresent(s -> queryParameters.put("start_from", s));
+        return queryParameters;
     }
 
     protected <T> Either<T, SdkException> post(String collectionName, T body, Class<T> cls) {
@@ -74,11 +105,21 @@ public class AbstractSDK {
 
     }
 
-    protected <T> Either<PaginatedResult<T>, SdkException> query(String collectionName, String queryName, Query<T> body, Class<T> cls) {
+    protected <T> Either<PaginatedResult<T>, SdkException> executeQuery(
+            String collectionName,
+            Query query,
+            Class<T> cls,
+            Integer limit,
+            String startFrom) {
 
         try {
-            String requestBody = this.jsonParser.objectToJsonString(body);
-            SdkHttpRequest request = new SdkHttpRequest(getBaseUrl(), buildUrl(collectionName, "query", queryName), SdkHttpRequest.HttpMethod.POST, getRequestHeaders(), requestBody);
+            String requestBody = this.jsonParser.objectToJsonString(query);
+            SdkHttpRequest request = SdkHttpRequestBuilder.aSdkHttpRequest()
+                    .withBaseUrl(getBaseUrl())
+                    .withPath(buildUrl(collectionName, "query")).withMethod(SdkHttpRequest.HttpMethod.POST).withHeaders(getRequestHeaders())
+                    .withBody(requestBody)
+                    .withQueryParameters(getPaginationQueryParameters(limit, startFrom))
+                    .build();
             return getResponseBodyPaginated(this.sdkHttpClient.execute(request), responseBody -> paginatedResultConverter(responseBody, cls));
         } catch (Exception e) {
             return Either.error(new SdkPayloadException("unable to serialize the request", e));
@@ -147,6 +188,11 @@ public class AbstractSDK {
     }
 
     public <T> T get(Either<T, SdkException> either) {
+        return either.ok()
+                .orElseThrow(() -> either.error().orElseThrow(() -> new IllegalStateException("unexpected error")));
+    }
+
+    public <T> PaginatedResult<T> getPaginated(Either<PaginatedResult<T>, SdkException> either) {
         return either.ok()
                 .orElseThrow(() -> either.error().orElseThrow(() -> new IllegalStateException("unexpected error")));
     }
