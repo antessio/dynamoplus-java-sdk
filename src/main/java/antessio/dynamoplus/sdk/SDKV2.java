@@ -64,6 +64,9 @@ public final class SDKV2 extends AbstractSDK {
 
     //================================== [domain] document =============================
 
+    public <T> PaginatedResult<T> getAll(String collectionName, Integer limit, String startFrom, Class<T> cls) {
+        return getPaginated(getAll(collectionName, cls, limit, startFrom));
+    }
 
     public <T> T createDocument(String collectionName, T document, Class<T> cls) {
         System.out.println("creating document " + document);

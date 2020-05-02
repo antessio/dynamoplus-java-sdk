@@ -2,7 +2,7 @@ package antessio.dynamoplus.sdk.domain.conditions;
 
 import java.util.List;
 
-public class ConditionBuilder {
+public class PredicateBuilder {
 
     private And and;
     private Eq eq;

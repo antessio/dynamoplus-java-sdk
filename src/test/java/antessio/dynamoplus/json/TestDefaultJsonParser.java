@@ -4,7 +4,7 @@ package antessio.dynamoplus.json;
 import antessio.dynamoplus.json.exception.JsonParsingException;
 import antessio.dynamoplus.sdk.PaginatedResult;
 import antessio.dynamoplus.sdk.domain.conditions.Predicate;
-import antessio.dynamoplus.sdk.domain.conditions.ConditionBuilder;
+import antessio.dynamoplus.sdk.domain.conditions.PredicateBuilder;
 import antessio.dynamoplus.sdk.domain.system.index.Index;
 import antessio.dynamoplus.sdk.domain.system.index.IndexBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,11 +38,11 @@ public class TestDefaultJsonParser {
     void parseIndex() throws JsonParsingException {
         //given
         //when
-        Predicate condition = new ConditionBuilder()
+        Predicate condition = new PredicateBuilder()
                 .withAnd(Arrays.asList(
-                        new ConditionBuilder().withEq("field1", "value1"),
-                        new ConditionBuilder().withEq("field2", "value2"),
-                        new ConditionBuilder().withRange("field3", "value3", "value4")
+                        new PredicateBuilder().withEq("field1", "value1"),
+                        new PredicateBuilder().withEq("field2", "value2"),
+                        new PredicateBuilder().withRange("field3", "value3", "value4")
                 ));
         Index index = new IndexBuilder()
                 .collection("example")
@@ -56,10 +56,10 @@ public class TestDefaultJsonParser {
 
     @Test
     void parseQuery() throws JsonParsingException {
-        Predicate predicate = new ConditionBuilder()
+        Predicate predicate = new PredicateBuilder()
                 .withAnd(Arrays.asList(
-                        new ConditionBuilder().withEq("field1", "value1"),
-                        new ConditionBuilder().withEq("field2", "value2")
+                        new PredicateBuilder().withEq("field1", "value1"),
+                        new PredicateBuilder().withEq("field2", "value2")
                 ));
         String c = defaultJsonParser.objectToJsonString(predicate);
         System.out.println("c = " + c);
