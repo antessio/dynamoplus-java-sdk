@@ -65,7 +65,7 @@ public class DefaultJsonParser implements JsonParser {
                         JsonObject rangeJson = new JsonObject();
                         rangeJson.addProperty("field_name", range.getFieldName());
                         rangeJson.addProperty("from", range.getFrom());
-                        rangeJson.addProperty("to", range.getFrom());
+                        rangeJson.addProperty("to", range.getTo());
                         condition.add("range", rangeJson);
                     }
                     return condition;
