@@ -13,30 +13,33 @@ public class Index {
     private Collection collection;
     private List<String> conditions;
     private String orderingKey;
+    private IndexConfiguration indexConfiguration;
 
     public Index() {
     }
 
-    public Index(UUID uid, String name, Collection collection, List<String> conditions, String orderingKey) {
+    public Index(UUID uid, String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration indexConfiguration) {
         this.uid = uid;
         this.name = name;
         this.collection = collection;
         this.conditions = conditions;
         this.orderingKey = orderingKey;
+        this.indexConfiguration = indexConfiguration;
     }
 
-    public Index(String name, Collection collection, List<String> conditions, String orderingKey) {
+    public Index(String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration indexConfiguration) {
         this.name = name;
         this.collection = collection;
         this.conditions = conditions;
         this.orderingKey = orderingKey;
+        this.indexConfiguration = indexConfiguration;
     }
 
-    public Index(String name, Collection collection, List<String> conditions) {
+    public Index(String name, Collection collection, List<String> conditions, IndexConfiguration indexConfiguration) {
         this.name = name;
         this.collection = collection;
         this.conditions = conditions;
-        this.orderingKey = null;
+        this.indexConfiguration = indexConfiguration;
     }
 
     public UUID getUid() {
@@ -59,6 +62,10 @@ public class Index {
         return orderingKey;
     }
 
+    public IndexConfiguration getIndexConfiguration() {
+        return indexConfiguration;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,22 +75,24 @@ public class Index {
                 Objects.equals(name, index.name) &&
                 Objects.equals(collection, index.collection) &&
                 Objects.equals(conditions, index.conditions) &&
-                Objects.equals(orderingKey, index.orderingKey);
+                Objects.equals(orderingKey, index.orderingKey) &&
+                indexConfiguration == index.indexConfiguration;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uid, name, collection, conditions, orderingKey);
+        return Objects.hash(uid, name, collection, conditions, orderingKey, indexConfiguration);
     }
 
     @Override
     public String toString() {
         return "Index{" +
-                "uid='" + uid + '\'' +
+                "uid=" + uid +
                 ", name='" + name + '\'' +
                 ", collection=" + collection +
                 ", conditions=" + conditions +
                 ", orderingKey='" + orderingKey + '\'' +
+                ", indexConfiguration=" + indexConfiguration +
                 '}';
     }
 }
