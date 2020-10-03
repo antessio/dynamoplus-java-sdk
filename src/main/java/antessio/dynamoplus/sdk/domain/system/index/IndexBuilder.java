@@ -1,6 +1,7 @@
 package antessio.dynamoplus.sdk.domain.system.index;
 
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
+import antessio.dynamoplus.sdk.domain.system.collection.CollectionBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,11 @@ public class IndexBuilder {
 
     public IndexBuilder collection(Collection collection) {
         this.collection = collection;
+        return this;
+    }
+
+    public IndexBuilder collection(String collectionName) {
+        this.collection = new CollectionBuilder().name(collectionName).createCollection();
         return this;
     }
 

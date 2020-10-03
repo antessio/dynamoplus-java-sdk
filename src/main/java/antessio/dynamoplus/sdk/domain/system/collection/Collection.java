@@ -1,6 +1,5 @@
 package antessio.dynamoplus.sdk.domain.system.collection;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,14 +8,16 @@ public class Collection {
     private String idKey;
     private String name;
     private List<Attribute> attributes;
+    private Boolean autoGenerateId;
 
     public Collection() {
     }
 
-    public Collection(String idKey, String name, List<Attribute> attributes) {
+    public Collection(String idKey, String name, List<Attribute> attributes, Boolean autoGenerateId) {
         this.idKey = idKey;
         this.name = name;
         this.attributes = attributes;
+        this.autoGenerateId = autoGenerateId;
     }
 
     public String getIdKey() {
@@ -29,6 +30,10 @@ public class Collection {
 
     public List<Attribute> getAttributes() {
         return attributes;
+    }
+
+    public Boolean isAutoGenerateId() {
+        return autoGenerateId;
     }
 
     @Override

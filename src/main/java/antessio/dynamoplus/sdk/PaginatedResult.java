@@ -5,21 +5,21 @@ import java.util.List;
 
 public class PaginatedResult<T> implements Serializable {
     private List<T> data;
-    private String lastKey;
+    private Boolean hasMore;
 
     public PaginatedResult() {
     }
 
-    public PaginatedResult(List<T> data, String lastKey) {
+    public PaginatedResult(List<T> data, Boolean hasMore) {
         this.data = data;
-        this.lastKey = lastKey;
+        this.hasMore = hasMore;
     }
 
     public List<T> getData() {
         return data;
     }
 
-    public String getLastKey() {
-        return lastKey;
+    public Boolean getHasMore() {
+        return hasMore;
     }
 }

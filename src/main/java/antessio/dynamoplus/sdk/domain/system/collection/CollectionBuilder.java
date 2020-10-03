@@ -6,6 +6,7 @@ public class CollectionBuilder {
     private String idKey;
     private String name;
     private List<Attribute> attributes;
+    private Boolean autoGenerateId;
 
     public CollectionBuilder idKey(String idKey) {
         this.idKey = idKey;
@@ -22,7 +23,12 @@ public class CollectionBuilder {
         return this;
     }
 
+    public CollectionBuilder autoGenerateId(Boolean autoGenerateId) {
+        this.autoGenerateId = autoGenerateId;
+        return this;
+    }
+
     public Collection createCollection() {
-        return new Collection(idKey, name, attributes);
+        return new Collection(idKey, name, attributes, autoGenerateId);
     }
 }

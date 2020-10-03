@@ -3,27 +3,27 @@ package antessio.dynamoplus.sdk.domain.system.collection;
 import java.util.List;
 
 public class Attribute {
-    private String attributeName;
-    private CollectionAttributeType attributeType;
+    private String name;
+    private CollectionAttributeType type;
     private List<CollectionAttributeConstraint> constraints;
     private List<Attribute> attributes;
 
     public Attribute() {
     }
 
-    public Attribute(String attributeName, CollectionAttributeType attributeType, List<CollectionAttributeConstraint> constraints, List<Attribute> attributes) {
-        this.attributeName = attributeName;
-        this.attributeType = attributeType;
+    public Attribute(String name, CollectionAttributeType type, List<CollectionAttributeConstraint> constraints, List<Attribute> attributes) {
+        this.name = name;
+        this.type = type;
         this.constraints = constraints;
         this.attributes = attributes;
     }
 
-    public String getAttributeName() {
-        return attributeName;
+    public String getName() {
+        return name;
     }
 
-    public CollectionAttributeType getAttributeType() {
-        return attributeType;
+    public CollectionAttributeType getType() {
+        return type;
     }
 
     public List<CollectionAttributeConstraint> getConstraints() {

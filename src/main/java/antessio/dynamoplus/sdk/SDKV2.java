@@ -3,6 +3,7 @@ package antessio.dynamoplus.sdk;
 
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.json.JsonParser;
+import antessio.dynamoplus.sdk.domain.document.query.Query;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationApiKey;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationHttpSignature;
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
@@ -25,17 +26,12 @@ public final class SDKV2 extends AbstractSDK {
         return get(post(COLLECTION_COLLECTION_NAME, collection, Collection.class));
     }
 
-
     public Collection getCollection(String id) {
         return get(get(id, COLLECTION_COLLECTION_NAME, Collection.class));
     }
 
     public PaginatedResult<Collection> getAllCollections(Integer limit, String startFrom) {
-        Query<Collection> query = new QueryBuilder<Collection>()
-                .limit(limit)
-                .startFrom(startFrom)
-                .build();
-        return get(query(COLLECTION_COLLECTION_NAME, null, query, Collection.class));
+        return getPaginated(getAll("collection", Collection.class, limit, startFrom));
     }
 
     public PaginatedResult<Collection> getAllCollections() {
@@ -68,6 +64,9 @@ public final class SDKV2 extends AbstractSDK {
 
     //================================== [domain] document =============================
 
+    public <T> PaginatedResult<T> getAll(String collectionName, Integer limit, String startFrom, Class<T> cls) {
+        return getPaginated(getAll(collectionName, cls, limit, startFrom));
+    }
 
     public <T> T createDocument(String collectionName, T document, Class<T> cls) {
         System.out.println("creating document " + document);
@@ -92,12 +91,8 @@ public final class SDKV2 extends AbstractSDK {
         }
     }
 
-    public <T> PaginatedResult<T> queryByIndex(String collectionName, String indexName, Query<T> query, Class<T> cls) {
-        return get(query(collectionName, indexName, query, cls));
-    }
-
-    public <T> PaginatedResult<T> queryAll(String collectionName, Integer limit, String startFrom, Class<T> cls) {
-        return queryByIndex(collectionName, null, new Query<>(null, limit, startFrom), cls);
+    public <T> PaginatedResult<T> query(String collectionName, Query query, Class<T> cls, Integer limit, String startFrom) {
+        return getPaginated(super.executeQuery(collectionName, query, cls, limit, startFrom));
     }
 
 
