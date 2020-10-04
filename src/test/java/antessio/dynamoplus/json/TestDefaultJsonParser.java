@@ -48,7 +48,7 @@ public class TestDefaultJsonParser {
                 .collection("example")
                 .name("example_by_whatever")
                 .orderingKey("field3")
-                .createIndex();
+                .build();
         //then
         String indexStr = defaultJsonParser.objectToJsonString(index);
         System.out.println("indexStr = " + indexStr);

@@ -1,6 +1,7 @@
 package antessio.dynamoplus.sdk.domain.system.index;
 
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
+import antessio.dynamoplus.sdk.domain.system.collection.CollectionBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,32 +14,39 @@ public class IndexBuilder {
     private String orderingKey;
     private IndexConfiguration indexConfiguration;
 
-    public IndexBuilder withUid(UUID uid) {
+    public IndexBuilder collection(String collectionName) {
+        this.collection = new CollectionBuilder()
+                .name(collectionName)
+                .createCollection();
+        return this;
+    }
+
+    public IndexBuilder uid(UUID uid) {
         this.uid = uid;
         return this;
     }
 
-    public IndexBuilder withName(String name) {
+    public IndexBuilder name(String name) {
         this.name = name;
         return this;
     }
 
-    public IndexBuilder withCollection(Collection collection) {
+    public IndexBuilder collection(Collection collection) {
         this.collection = collection;
         return this;
     }
 
-    public IndexBuilder withConditions(List<String> conditions) {
+    public IndexBuilder conditions(List<String> conditions) {
         this.conditions = conditions;
         return this;
     }
 
-    public IndexBuilder withOrderingKey(String orderingKey) {
+    public IndexBuilder orderingKey(String orderingKey) {
         this.orderingKey = orderingKey;
         return this;
     }
 
-    public IndexBuilder withIndexConfiguration(IndexConfiguration indexConfiguration) {
+    public IndexBuilder indexConfiguration(IndexConfiguration indexConfiguration) {
         this.indexConfiguration = indexConfiguration;
         return this;
     }
