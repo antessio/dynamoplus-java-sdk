@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public class Index {
 
-    private UUID uid;
     private String name;
     private Collection collection;
     private List<String> conditions;
@@ -18,14 +17,6 @@ public class Index {
     public Index() {
     }
 
-    public Index(UUID uid, String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration indexConfiguration) {
-        this.uid = uid;
-        this.name = name;
-        this.collection = collection;
-        this.conditions = conditions;
-        this.orderingKey = orderingKey;
-        this.indexConfiguration = indexConfiguration;
-    }
 
     public Index(String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration indexConfiguration) {
         this.name = name;
@@ -40,10 +31,6 @@ public class Index {
         this.collection = collection;
         this.conditions = conditions;
         this.indexConfiguration = indexConfiguration;
-    }
-
-    public UUID getUid() {
-        return uid;
     }
 
     public String getName() {
@@ -71,8 +58,7 @@ public class Index {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Index index = (Index) o;
-        return Objects.equals(uid, index.uid) &&
-                Objects.equals(name, index.name) &&
+        return Objects.equals(name, index.name) &&
                 Objects.equals(collection, index.collection) &&
                 Objects.equals(conditions, index.conditions) &&
                 Objects.equals(orderingKey, index.orderingKey) &&
@@ -81,14 +67,13 @@ public class Index {
 
     @Override
     public int hashCode() {
-        return Objects.hash(uid, name, collection, conditions, orderingKey, indexConfiguration);
+        return Objects.hash(name, collection, conditions, orderingKey, indexConfiguration);
     }
 
     @Override
     public String toString() {
         return "Index{" +
-                "uid=" + uid +
-                ", name='" + name + '\'' +
+                "  name='" + name + '\'' +
                 ", collection=" + collection +
                 ", conditions=" + conditions +
                 ", orderingKey='" + orderingKey + '\'' +

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class IndexBuilder {
-    private UUID uid;
     private String name;
     private Collection collection;
     private List<String> conditions;
@@ -21,10 +20,6 @@ public class IndexBuilder {
         return this;
     }
 
-    public IndexBuilder uid(UUID uid) {
-        this.uid = uid;
-        return this;
-    }
 
     public IndexBuilder name(String name) {
         this.name = name;
@@ -52,6 +47,6 @@ public class IndexBuilder {
     }
 
     public Index build() {
-        return new Index(uid, name, collection, conditions, orderingKey, indexConfiguration);
+        return new Index(name, collection, conditions, orderingKey, indexConfiguration);
     }
 }
