@@ -3,6 +3,7 @@ package antessio.dynamoplus.sdk;
 
 import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.json.JsonParser;
+import antessio.dynamoplus.sdk.domain.conditions.Eq;
 import antessio.dynamoplus.sdk.domain.document.query.Query;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationApiKey;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationHttpSignature;
@@ -31,16 +32,34 @@ public final class SDKV2 extends AbstractSDK {
     }
 
     public PaginatedResult<Collection> getAllCollections(Integer limit, String startFrom) {
-        return getPaginated(getAll("collection", Collection.class, limit, startFrom));
+        return getPaginated(getAll(COLLECTION_COLLECTION_NAME, Collection.class, limit, startFrom));
     }
 
     public PaginatedResult<Collection> getAllCollections() {
         return getAllCollections(null, null);
     }
+
+    public void deleteCollection(Collection collection) {
+        Optional<SdkException> maybeError = delete(collection.getName(), COLLECTION_COLLECTION_NAME);
+        if (maybeError.isPresent()) {
+            throw maybeError.get();
+        }
+    }
     //================================== [system] index =============================
 
     public Index createIndex(Index index) {
         return get(post(INDEX_COLLECTION_NAME, index, Index.class));
+    }
+
+    public PaginatedResult<Index> getIndexByCollectionName(String collectionName, Integer limit, String startFrom) {
+        return query(INDEX_COLLECTION_NAME, new Query(new Eq("collection.name", collectionName)), Index.class, 1, startFrom);
+    }
+
+    public void deleteIndex(Index index) {
+        Optional<SdkException> maybeError = delete(index.getName(), INDEX_COLLECTION_NAME);
+        if (maybeError.isPresent()) {
+            throw maybeError.get();
+        }
     }
 
     //================================== [system] client authorization =============================

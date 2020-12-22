@@ -22,4 +22,12 @@ public class PaginatedResult<T> implements Serializable {
     public Boolean getHasMore() {
         return hasMore;
     }
+
+    @Override
+    public String toString() {
+        return "PaginatedResult{" +
+                "data=" + data +
+                ", hasMore=" + hasMore +
+                '}';
+    }
 }

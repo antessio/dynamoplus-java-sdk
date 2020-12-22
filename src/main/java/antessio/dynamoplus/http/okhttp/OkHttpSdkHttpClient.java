@@ -5,6 +5,7 @@ import antessio.dynamoplus.authentication.bean.Credentials;
 import antessio.dynamoplus.authentication.provider.CredentialsProvider;
 import antessio.dynamoplus.http.*;
 import okhttp3.*;
+import okhttp3.logging.HttpLoggingInterceptor;
 import okio.Buffer;
 
 import java.io.IOException;
@@ -104,12 +105,14 @@ public class OkHttpSdkHttpClient extends AbstractSdkHttpClient {
 
     public OkHttpSdkHttpClient(HttpConfiguration httpConfiguration, CredentialsProvider credentialsProvider) {
         super(httpConfiguration, credentialsProvider);
+        HttpLoggingInterceptor.Logger httpLogger = System.out::println;
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
                 .readTimeout(httpConfiguration.getReadTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
                 .writeTimeout(httpConfiguration.getWriteTimeoutInMilliseconds(), TimeUnit.MILLISECONDS)
                 .addNetworkInterceptor(new DigestHeaderInterceptor())
                 .addNetworkInterceptor(new CredentialsProviderNetworkInterceptor(credentialsProvider))
+                .addInterceptor(new HttpLoggingInterceptor(httpLogger).setLevel(HttpLoggingInterceptor.Level.BODY))
                 .build();
 
     }
