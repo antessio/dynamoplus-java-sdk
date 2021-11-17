@@ -17,6 +17,7 @@ public class AbstractSDK {
     public static final String COLLECTION_COLLECTION_NAME = "collection";
     public static final String INDEX_COLLECTION_NAME = "index";
     public static final String CLIENT_AUTHORIZATION_COLLECTION_NAME = "client_authorization";
+    public static final String AGGREGATION_CONFIGURATION_COLLECTION_NAME = "aggregation_configuration";
 
     protected final String host;
     protected final SdkHttpClient sdkHttpClient;

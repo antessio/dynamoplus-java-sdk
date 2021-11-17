@@ -3,9 +3,15 @@ package antessio.dynamoplus.json;
 import antessio.dynamoplus.json.exception.JsonParsingException;
 import antessio.dynamoplus.sdk.PaginatedResult;
 import antessio.dynamoplus.sdk.domain.conditions.*;
+import antessio.dynamoplus.sdk.domain.system.aggregation.AggregationConfigurationType;
+import antessio.dynamoplus.sdk.domain.system.aggregation.payload.AggregationPayloadInterface;
+import antessio.dynamoplus.sdk.domain.system.aggregation.payload.avg.AggregationAvgPayload;
+import antessio.dynamoplus.sdk.domain.system.aggregation.payload.count.AggregationCountPayload;
+import antessio.dynamoplus.sdk.domain.system.aggregation.payload.sum.AggregationSumPayload;
 import com.google.gson.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +22,17 @@ public class DefaultJsonParser implements JsonParser {
     public DefaultJsonParser() {
         this.gson = new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .registerTypeAdapter(AggregationPayloadInterface.class, (JsonDeserializer<AggregationPayloadInterface>) (json, typeOfT, context) -> {
+                    JsonObject root = json.getAsJsonObject();
+                    if (root.has("avg")) {
+                        return new AggregationAvgPayload(root.get("avg").getAsDouble());
+                    } else if (root.has("count")) {
+                        return new AggregationCountPayload(root.get("count").getAsInt());
+                    } else if (root.has("sum")) {
+                        return new AggregationSumPayload(root.get("sum").getAsDouble());
+                    }
+                    return null;
+                })
                 .registerTypeAdapter(Predicate.class, (JsonDeserializer<Predicate>) (json, typeOfT, context) -> {
                     JsonObject root = json.getAsJsonObject();
                     if (root.has("eq")) {
@@ -31,18 +48,6 @@ public class DefaultJsonParser implements JsonParser {
                                 .forEachRemaining(j -> predicates.add(context.deserialize(j, Predicate.class)));
                         return new And(predicates);
                     }
-                    /*if (root.has("type")) {
-                        ConditionTypeEnum type = context.deserialize(root.get("type"), ConditionTypeEnum.class);
-                        switch (type) {
-                            case EQ:
-                                return new Eq(root.get("field_name").getAsString(), root.get("value").getAsString());
-                            case AND:
-
-                            case RANGE:
-                                return new Range(root.get("field_name").getAsString(), root.get("from").getAsString(), root.get("to").getAsString());
-                        }
-                    }*/
-
                     return null;
                 })
                 .registerTypeHierarchyAdapter(Predicate.class, (JsonSerializer<Predicate>) (src, typeOfSrc, context) -> {
@@ -70,19 +75,6 @@ public class DefaultJsonParser implements JsonParser {
                     }
                     return condition;
                 })
-//                .registerTypeAdapter(PaginatedResult.class, new JsonDeserializer<PaginatedResult>() {
-//                    @Override
-//                    public PaginatedResult deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
-//                        JsonObject root = jsonElement.getAsJsonObject();
-//                        List data = jsonDeserializationContext.deserialize(root.getAsJsonArray("data"), List.class);
-//                        String lastKey = null;
-//                        if (root.has("last_key")) {
-//                            //lastKey = Optional.ofNullable(root.get("last_key")).map(JsonElement::getAsString).filter(s -> !s.equals("null")).orElse(null);
-//                            System.out.println("root = " + root);
-//                        }
-//                        return new PaginatedResult(data, lastKey);
-//                    }
-//                })
                 .create();
 
     }

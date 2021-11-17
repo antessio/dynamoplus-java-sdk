@@ -5,6 +5,7 @@ import antessio.dynamoplus.http.SdkHttpClient;
 import antessio.dynamoplus.json.JsonParser;
 import antessio.dynamoplus.sdk.domain.conditions.Eq;
 import antessio.dynamoplus.sdk.domain.document.query.Query;
+import antessio.dynamoplus.sdk.domain.system.aggregation.AggregationConfiguration;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationApiKey;
 import antessio.dynamoplus.sdk.domain.system.clientauthorization.ClientAuthorizationHttpSignature;
 import antessio.dynamoplus.sdk.domain.system.collection.Collection;
@@ -80,6 +81,19 @@ public final class SDKV2 extends AbstractSDK {
         return get(get(clientId, CLIENT_AUTHORIZATION_COLLECTION_NAME, ClientAuthorizationHttpSignature.class));
     }
 
+    //================================== [system] aggregation =============================
+
+    public AggregationConfiguration createAggregation(AggregationConfiguration aggregationConfiguration) {
+        return get(post(AGGREGATION_CONFIGURATION_COLLECTION_NAME, aggregationConfiguration, AggregationConfiguration.class));
+    }
+
+    public AggregationConfiguration getAggregation(String name) {
+        return get(get(name, AGGREGATION_CONFIGURATION_COLLECTION_NAME, AggregationConfiguration.class));
+    }
+
+    public PaginatedResult<AggregationConfiguration> getAggregationConfigurations(String collectionName, Integer limit, String startFrom) {
+        return get(getAll(collectionName + "/" + AGGREGATION_CONFIGURATION_COLLECTION_NAME, AggregationConfiguration.class, limit, startFrom));
+    }
 
     //================================== [domain] document =============================
 
