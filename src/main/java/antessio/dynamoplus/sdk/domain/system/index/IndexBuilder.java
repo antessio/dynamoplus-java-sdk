@@ -4,14 +4,13 @@ import antessio.dynamoplus.sdk.domain.system.collection.Collection;
 import antessio.dynamoplus.sdk.domain.system.collection.CollectionBuilder;
 
 import java.util.List;
-import java.util.UUID;
 
 public class IndexBuilder {
     private String name;
     private Collection collection;
     private List<String> conditions;
     private String orderingKey;
-    private IndexConfiguration indexConfiguration;
+    private IndexConfiguration configuration;
 
     public IndexBuilder collection(String collectionName) {
         this.collection = new CollectionBuilder()
@@ -41,12 +40,12 @@ public class IndexBuilder {
         return this;
     }
 
-    public IndexBuilder indexConfiguration(IndexConfiguration indexConfiguration) {
-        this.indexConfiguration = indexConfiguration;
+    public IndexBuilder configuration(IndexConfiguration indexConfiguration) {
+        this.configuration = indexConfiguration;
         return this;
     }
 
     public Index build() {
-        return new Index(name, collection, conditions, orderingKey, indexConfiguration);
+        return new Index(name, collection, conditions, orderingKey, configuration);
     }
 }

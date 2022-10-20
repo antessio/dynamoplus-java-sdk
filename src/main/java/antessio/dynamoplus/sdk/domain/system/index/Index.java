@@ -4,7 +4,6 @@ import antessio.dynamoplus.sdk.domain.system.collection.Collection;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class Index {
 
@@ -12,25 +11,25 @@ public class Index {
     private Collection collection;
     private List<String> conditions;
     private String orderingKey;
-    private IndexConfiguration indexConfiguration;
+    private IndexConfiguration configuration;
 
     public Index() {
     }
 
 
-    public Index(String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration indexConfiguration) {
+    public Index(String name, Collection collection, List<String> conditions, String orderingKey, IndexConfiguration configuration) {
         this.name = name;
         this.collection = collection;
         this.conditions = conditions;
         this.orderingKey = orderingKey;
-        this.indexConfiguration = indexConfiguration;
+        this.configuration = configuration;
     }
 
-    public Index(String name, Collection collection, List<String> conditions, IndexConfiguration indexConfiguration) {
+    public Index(String name, Collection collection, List<String> conditions, IndexConfiguration configuration) {
         this.name = name;
         this.collection = collection;
         this.conditions = conditions;
-        this.indexConfiguration = indexConfiguration;
+        this.configuration = configuration;
     }
 
     public String getName() {
@@ -49,8 +48,8 @@ public class Index {
         return orderingKey;
     }
 
-    public IndexConfiguration getIndexConfiguration() {
-        return indexConfiguration;
+    public IndexConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -62,12 +61,12 @@ public class Index {
                 Objects.equals(collection, index.collection) &&
                 Objects.equals(conditions, index.conditions) &&
                 Objects.equals(orderingKey, index.orderingKey) &&
-                indexConfiguration == index.indexConfiguration;
+                configuration == index.configuration;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, collection, conditions, orderingKey, indexConfiguration);
+        return Objects.hash(name, collection, conditions, orderingKey, configuration);
     }
 
     @Override
@@ -77,7 +76,7 @@ public class Index {
                 ", collection=" + collection +
                 ", conditions=" + conditions +
                 ", orderingKey='" + orderingKey + '\'' +
-                ", indexConfiguration=" + indexConfiguration +
+                ", indexConfiguration=" + configuration +
                 '}';
     }
 }
